@@ -2,26 +2,27 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
-using StringHelper;
 using System.Collections.Generic;
+using System.Threading;
+using System.Globalization;
 
-namespace LiteStringBuilder.Tests
+namespace Celezt.String.Tests
 {
     [ExcludeFromCodeCoverage]
     [TestClass]
-    public class ShouldLiteStringBuilder
+    public class MutStringTest
     {
         [TestMethod]
-        public void TestLiteStringBuilder()
+        public void TestMutString()
         {
-            var sb = new StringHelper.LiteStringBuilder();
-            sb = new StringHelper.LiteStringBuilder(0);
-            sb = new StringHelper.LiteStringBuilder(-32);
-            sb = new StringHelper.LiteStringBuilder(null);
+            var sb = new MutString();
+            sb = new MutString(0);
+            sb = new MutString(-32);
+            sb = new MutString(null);
             Assert.AreEqual(sb.ToString(), "");
-            sb = new StringHelper.LiteStringBuilder("");
+            sb = new MutString("");
             Assert.AreEqual(sb.ToString(), "");
-            sb = new StringHelper.LiteStringBuilder("Hello");
+            sb = new MutString("Hello");
             Assert.AreEqual(sb.ToString(), "Hello");
         }
 
@@ -39,7 +40,7 @@ namespace LiteStringBuilder.Tests
                 chars[i] = i;
             }
             var str = new string(chars);
-            var sb = new StringHelper.LiteStringBuilder();
+            var sb = new MutString();
             sb.Append(chars);
 
             Assert.AreEqual(sb.ToString(), str);
@@ -64,12 +65,12 @@ namespace LiteStringBuilder.Tests
         }
 
         [TestMethod]
-        public void TestLiteStringBuilderThreaded()
+        public void TestMutStringThreaded()
         {
             var list = new System.Collections.Concurrent.ConcurrentDictionary<int,string>();
             System.Threading.Tasks.Parallel.For(0, 1000, (i) =>
             {
-                var fs = new StringHelper.LiteStringBuilder(1);
+                var fs = new MutString(1);
                 fs.Append(GetString((char)(48 + (i % 10))));
                 list.TryAdd(i, fs.ToString());
         });
@@ -90,7 +91,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestLength()
         {
-            var sb = new StringHelper.LiteStringBuilder();
+            var sb = new MutString();
             Assert.IsTrue(sb.Length == 0);
             sb.Append("Hello");
             Assert.IsTrue(sb.Length == 5);
@@ -99,7 +100,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestIsEmpty()
         {
-            var sb = new StringHelper.LiteStringBuilder();
+            var sb = new MutString();
             Assert.IsTrue(sb.IsEmpty());
             sb.Append("Hello");
             Assert.IsFalse(sb.IsEmpty());
@@ -108,7 +109,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestClear()
         {
-            var sb = new StringHelper.LiteStringBuilder();
+            var sb = new MutString();
             Assert.IsTrue(sb.IsEmpty());
             sb.Append("Hello");
             Assert.IsFalse(sb.IsEmpty());
@@ -121,11 +122,11 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestCreate()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("Hello");
             Assert.IsFalse(sb.IsEmpty());
             Assert.AreEqual(sb.ToString(), "Hello");
-            sb = StringHelper.LiteStringBuilder.Create(32);
+            sb = MutString.Create(32);
             sb.Append("Hello");
             Assert.IsFalse(sb.IsEmpty());
             Assert.AreEqual(sb.ToString(), "Hello");
@@ -134,15 +135,15 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestEquals()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("Hello");
 
-            var sb1 = StringHelper.LiteStringBuilder.Create();
+            var sb1 = MutString.Create();
             sb1.Append("Hello");
 
             Assert.IsTrue(sb1.Equals(sb));
 
-            sb1 = StringHelper.LiteStringBuilder.Create();
+            sb1 = MutString.Create();
             sb1.Append("hello");
             Assert.IsFalse(sb1.Equals(sb));
 
@@ -166,15 +167,15 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestGetHashCode()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("Hello");
 
-            var sb1 = StringHelper.LiteStringBuilder.Create();
+            var sb1 = MutString.Create();
             sb1.Append("Hello");
 
             Assert.IsTrue(sb1.GetHashCode() == sb.GetHashCode());
 
-            sb1 = StringHelper.LiteStringBuilder.Create();
+            sb1 = MutString.Create();
             sb1.Append("hello");
             Assert.IsFalse(sb1.GetHashCode() == sb.GetHashCode());
 
@@ -196,7 +197,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestIndex()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("abcd");
             try
             {
@@ -227,7 +228,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestAppendT()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append<int>(null);
             Assert.AreEqual(sb.Length, 0);
             sb.Append<string>("", null, "1");
@@ -244,7 +245,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestAppendObjects()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("Test", 'c', true, double.MaxValue, long.MaxValue,ulong.MaxValue,uint.MaxValue,null, int.MaxValue, short.MaxValue, decimal.MaxValue, double.MaxValue, float.MaxValue, DateTime.MinValue, sbyte.MinValue, byte.MinValue, new char[2] { 'c', 'b' });
             Assert.IsTrue(true);
         }
@@ -252,7 +253,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestAppend()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             Assert.IsTrue(sb.Length == 0);
             sb.Append((string)null);
             Assert.IsTrue(sb.Length == 0);
@@ -301,6 +302,7 @@ namespace LiteStringBuilder.Tests
             sb.Append((sbyte)Convert.ToByte('a'));
             Assert.AreEqual(sb.ToString(), ((sbyte)Convert.ToByte('a')).ToString());
 
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             var dt = DateTime.Now;
             sb.Clear();
             sb.Append(dt);
@@ -379,7 +381,7 @@ namespace LiteStringBuilder.Tests
             sb.Append(new char[] { 'h', 'i' });
             Assert.AreEqual(sb.ToString(), "hi");
 
-            sb = StringHelper.LiteStringBuilder.Create();
+            sb = MutString.Create();
             for(var i = 0; i < 1000; i++)
             {
                 sb.Append('a');
@@ -390,7 +392,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestAppendline()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             Assert.IsTrue(sb.Length == 0);
             sb.AppendLine();
             Assert.IsTrue(sb.Length == Environment.NewLine.Length);
@@ -411,7 +413,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestReplace()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("ABCabcABCdefgABC");
             sb.Replace("ABC", "123");
             Assert.AreEqual(sb.ToString(), "123abc123defg123");
@@ -471,7 +473,7 @@ namespace LiteStringBuilder.Tests
         [TestMethod]
         public void TestSet()
         {
-            var sb = StringHelper.LiteStringBuilder.Create();
+            var sb = MutString.Create();
             sb.Append("Hello World");
             sb.Set("Hi");
             Assert.IsFalse(sb.IsEmpty());
@@ -499,20 +501,6 @@ namespace LiteStringBuilder.Tests
                 val = val * value; 
             }
             return val;
-        }
-
-
-        [TestMethod]
-        public void TestGetIntLength()
-        {
-            for(int i = 0; i < ulong.MaxValue.ToString("###0").Length; i++)
-            {
-                int a = Utilities.GetIntLength((ulong)Math.Pow(10, i));
-                int b= Math.Pow(10, i).ToString("###0").Length;
-
-                Assert.AreEqual(a, b);
-            }
-         
         }
     }
 }

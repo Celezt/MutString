@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LiteStringBuilder\LiteStringBuilder.csproj" />
+    <ProjectReference Include="..\..\src\LiteStringBuilder\MutString.csproj" />
   </ItemGroup>
 
 </Project>

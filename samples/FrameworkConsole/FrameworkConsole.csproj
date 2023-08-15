@@ -53,9 +53,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LiteStringBuilder\LiteStringBuilder.csproj">
+    <ProjectReference Include="..\..\src\LiteStringBuilder\MutString.csproj">
       <Project>{2b15f293-1711-402b-83ce-f5f15bfe44c4}</Project>
-      <Name>LiteStringBuilder</Name>
+      <Name>MutString</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
