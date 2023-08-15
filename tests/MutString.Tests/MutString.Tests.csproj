@@ -56,8 +56,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LiteStringBuilder\MutString.csproj">
-      <Project>{2b15f293-1711-402b-83ce-f5f15bfe44c4}</Project>
+    <ProjectReference Include="..\..\src\MutString\MutString.csproj">
+      <Project>{0c2a4956-e8fb-4721-aafe-6ff8f43e9fbc}</Project>
       <Name>MutString</Name>
     </ProjectReference>
   </ItemGroup>
