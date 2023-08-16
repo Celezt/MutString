@@ -8,7 +8,7 @@ namespace Celezt.String;
 ///<summary>
 /// Mutable <see cref="string"/>.
 ///</summary>
-public struct MutString
+public struct MutString : IEquatable<MutString>
 {
     private const int DEFAULT_CAPACITY = 16;
 
@@ -441,11 +441,9 @@ public struct MutString
     public override bool Equals(object obj) => obj is MutString ? Equals((MutString)obj) : false;
     public bool Equals(MutString other)
     {
-        // Check for same reference.
         if (ReferenceEquals(this, other))
             return true;
 
-        // Check for same Id and same Values.
         if (other.Length != this.Length)
             return false;
 
@@ -467,6 +465,21 @@ public struct MutString
     public static implicit operator MutString(char[] value) => new MutString(value);
     public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
     public static implicit operator MutString(Span<char> value) => new MutString(value);
+
+    public static bool operator ==(MutString lhs, MutString rhs) => lhs.Equals(rhs);
+    public static bool operator !=(MutString lhs, MutString rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString lhs, ReadOnlySpan<char> rhs) => MemoryExtensions.Equals(lhs.Span, rhs, StringComparison.Ordinal);
+    public static bool operator !=(MutString lhs, ReadOnlySpan<char> rhs) => !(lhs == rhs);
+    public static bool operator ==(ReadOnlySpan<char> lhs, MutString rhs) => MemoryExtensions.Equals(lhs, rhs.Span, StringComparison.Ordinal);
+    public static bool operator !=(ReadOnlySpan<char> lhs, MutString rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString lhs, Span<char> rhs) => lhs == (ReadOnlySpan<char>)rhs;
+    public static bool operator !=(MutString lhs, Span<char> rhs) => !(lhs == rhs);
+    public static bool operator ==(Span<char> lhs, MutString rhs) => (ReadOnlySpan<char>)lhs == rhs;
+    public static bool operator !=(Span<char> lhs, MutString rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString lhs, string rhs) => lhs == rhs.AsSpan();
+    public static bool operator !=(MutString lhs, string rhs) => !(lhs == rhs);
+    public static bool operator ==(string lhs, MutString rhs) => lhs.AsSpan() == rhs;
+    public static bool operator !=(string lhs, MutString rhs) => !(lhs == rhs);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Append(ulong value, bool isNegative)

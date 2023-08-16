@@ -525,4 +525,38 @@ public class MutStringTest
         Assert.AreEqual(new MutString("Hello"), Implicit(new char[] { 'H', 'e', 'l', 'l', 'o' }));
         Assert.AreEqual(new MutString("Hello"), Implicit((new char[] { 'H', 'e', 'l', 'l', 'o' }).AsSpan()));
     }
+
+    [TestMethod]
+    public void TextComparisonOperators()
+    {
+        var ms = new MutString("Hello");
+        var ms2 = ms;
+        ref var ms3 = ref ms;
+
+        var chr = new char[] { 'H', 'e', 'l', 'l', 'o' };
+
+        Assert.IsTrue(ms == ms2);
+        Assert.IsTrue(ms == ms3);
+        Assert.IsTrue(ms == new MutString("Hello"));
+        Assert.IsTrue(ms == "Hello");
+        Assert.IsTrue("Hello" == ms);
+        Assert.IsTrue(ms == "Hello".AsSpan());
+        Assert.IsTrue("Hello".AsSpan() == ms);
+        Assert.IsTrue(ms == chr);
+        Assert.IsTrue(chr == ms);
+        Assert.IsTrue(ms == chr.AsSpan());
+        Assert.IsTrue(chr.AsSpan() == ms);
+
+        Assert.IsFalse(ms != ms2);
+        Assert.IsFalse(ms != ms3);
+        Assert.IsFalse(ms != new MutString("Hello"));
+        Assert.IsFalse(ms != "Hello");
+        Assert.IsFalse("Hello" != ms);
+        Assert.IsFalse(ms != "Hello".AsSpan());
+        Assert.IsFalse("Hello".AsSpan() != ms);
+        Assert.IsFalse(ms != chr);
+        Assert.IsFalse(chr != ms);
+        Assert.IsFalse(ms != chr.AsSpan());
+        Assert.IsFalse(chr.AsSpan() != ms);
+    }
 }
