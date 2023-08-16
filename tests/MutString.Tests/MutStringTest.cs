@@ -16,18 +16,25 @@ public class MutStringTest
     public void TestMutString()
     {
         var ms = new MutString();
+
         ms = new MutString(0);
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString(-32);
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString((string)null);
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString((char[])null);
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString(ReadOnlySpan<char>.Empty);
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString("");
         Assert.AreEqual("", ms.ToString());
+
         ms = new MutString("Hello");
         Assert.AreEqual("Hello", ms.ToString());
     }
@@ -65,20 +72,6 @@ public class MutStringTest
     }
 
     [TestMethod]
-    public void TestCapacity()
-    {
-        var ms = new MutString();
-
-        Assert.AreEqual(16, ms.Capacity);
-
-        ms.Append("Hello");
-        Assert.AreEqual(16, ms.Capacity);
-
-        ms.Append("Hello beautiful world!");
-        Assert.AreEqual(64, ms.Capacity);
-    }
-
-    [TestMethod]
     public void TestMutStringThreaded()
     {
         static string GetString(char c) => new string(c, 1000);
@@ -105,33 +98,67 @@ public class MutStringTest
     }
 
     [TestMethod]
+    public void TestCapacity()
+    {
+        var ms = new MutString();
+
+        Assert.AreEqual(16, ms.Capacity);
+
+        ms.Append("Hello");
+        Assert.AreEqual(16, ms.Capacity);
+
+        ms.Append("Hello beautiful world!");
+        Assert.AreEqual(64, ms.Capacity);
+    }
+
+    [TestMethod]
     public void TestLength()
     {
         var ms = new MutString();
+
         Assert.IsTrue(ms.Length == 0);
+
         ms.Append("Hello");
         Assert.IsTrue(ms.Length == 5);
+
+        ms.Length = 2;
+        Assert.IsTrue(ms.Length == 2);
+        Assert.AreEqual("He", ms.ToString());
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.Length = -1;
+        });
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.Length = 17;
+        });
     }
 
     [TestMethod]
     public void TestIsEmpty()
     {
         var ms = new MutString();
-        Assert.IsTrue(ms.IsEmpty());
+
+        Assert.IsTrue(ms.IsEmpty);
+
         ms.Append("Hello");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
     }
 
     [TestMethod]
     public void TestClear()
     {
         var ms = new MutString();
-        Assert.IsTrue(ms.IsEmpty());
+
+        Assert.IsTrue(ms.IsEmpty);
+
         ms.Append("Hello");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("Hello", ms.ToString());
+
         ms.Clear();
-        Assert.IsTrue(ms.IsEmpty());
+        Assert.IsTrue(ms.IsEmpty);
         Assert.AreEqual("", ms.ToString());
     }
 
@@ -139,12 +166,14 @@ public class MutStringTest
     public void TestCreate()
     {
         var ms = MutString.Create();
+
         ms.Append("Hello");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("Hello", ms.ToString());
+
         ms = MutString.Create(32);
         ms.Append("Hello");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("Hello", ms.ToString());
     }
 
@@ -215,26 +244,15 @@ public class MutStringTest
     {
         var ms = MutString.Create();
         ms.Append("abcd");
-        try
+
+        Throws<IndexOutOfRangeException>(() =>
         {
             var c = ms[5];
-            Assert.Fail("Should have exception");
-        }
-        catch (Exception)
-        {
-            Assert.IsTrue(true);
-        }
-
-        try
+        });
+        Throws<ArgumentOutOfRangeException>(() =>
         {
             ms[5] = 'c';
-            Assert.Fail("Should have exception");
-        }
-        catch (Exception)
-        {
-            Assert.IsTrue(true);
-        }
-
+        });
 
         Assert.AreEqual('b', ms[1]);
         ms[1] = 'z';
@@ -482,21 +500,48 @@ public class MutStringTest
         var ms = MutString.Create();
         ms.Append("Hello World");
         ms.Set("Hi");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("Hi", ms.ToString());
 
 
         ms.Set("123", "45");
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("12345", ms.ToString());
 
         ms.Set(null, "",123);
-        Assert.IsFalse(ms.IsEmpty());
+        Assert.IsFalse(ms.IsEmpty);
         Assert.AreEqual("123", ms.ToString());
 
         ms.Set(null, "", null);
-        Assert.IsTrue(ms.IsEmpty());
+        Assert.IsTrue(ms.IsEmpty);
         Assert.AreEqual("", ms.ToString());
+    }
+
+    [TestMethod]
+    public void TestClone()
+    {
+        var ms = MutString.Create("Hello");
+        var ms1 = ms.Clone();
+        ms1.Append(" beautiful world!");
+
+        Assert.AreEqual("Hello", ms);
+        Assert.AreEqual("Hello beautiful world!", ms1);
+
+        Assert.AreEqual(5, ms.Length);
+        Assert.AreEqual(22, ms1.Length);
+
+        Assert.AreEqual(16, ms.Capacity);
+        Assert.AreEqual(64, ms1.Capacity);
+
+        ms1.Set("No");
+        Assert.AreEqual("Hello", ms);
+        Assert.AreEqual("No", ms1);
+
+        Assert.AreEqual(5, ms.Length);
+        Assert.AreEqual(2, ms1.Length);
+
+        Assert.AreEqual(16, ms.Capacity);
+        Assert.AreEqual(64, ms1.Capacity);
     }
 
     [TestMethod]
@@ -518,8 +563,6 @@ public class MutStringTest
     {
         MutString Implicit(MutString mut) => mut;
 
-        var ms = MutString.Create();
-
         Assert.AreEqual(new MutString("Hello"), Implicit("Hello"));
         Assert.AreEqual(new MutString("Hello"), Implicit("Hello".AsSpan()));
         Assert.AreEqual(new MutString("Hello"), Implicit(new char[] { 'H', 'e', 'l', 'l', 'o' }));
@@ -529,7 +572,7 @@ public class MutStringTest
     [TestMethod]
     public void TextComparisonOperators()
     {
-        var ms = new MutString("Hello");
+        var ms = MutString.Create("Hello");
         var ms2 = ms;
         ref var ms3 = ref ms;
 
@@ -558,5 +601,50 @@ public class MutStringTest
         Assert.IsFalse(chr != ms);
         Assert.IsFalse(ms != chr.AsSpan());
         Assert.IsFalse(chr.AsSpan() != ms);
+    }
+
+    [TestMethod]
+    public void TestEnumerator()
+    {
+        var ms = MutString.Create("Hello World");
+        Span<char> span = stackalloc char[11];
+        int length = 0;
+
+        foreach (char c in ms)
+            span[length++] = c;
+
+        Assert.IsTrue(ms == span);
+    }
+
+    [TestMethod]
+    public void TestComparable()
+    {
+        var ms = MutString.Create("Hello World");
+
+        Assert.IsTrue(ms.CompareTo("Hello World", StringComparison.Ordinal) == 0);
+        Assert.IsTrue(ms.CompareTo("Gello World", StringComparison.Ordinal) > 0);
+        Assert.IsTrue(ms.CompareTo("Iello World", StringComparison.Ordinal) < 0);
+
+        Assert.IsTrue(ms.CompareTo("hello world", StringComparison.OrdinalIgnoreCase) == 0);
+        Assert.IsTrue(ms.CompareTo("gello world", StringComparison.OrdinalIgnoreCase) > 0);
+        Assert.IsTrue(ms.CompareTo("iello world", StringComparison.OrdinalIgnoreCase) < 0);
+    }
+
+    public static void Throws<T>(Action task) where T : Exception
+    {
+        try
+        {
+            task();
+        }
+        catch (Exception e)
+        {
+            Assert.IsTrue(typeof(T).IsAssignableTo(e.GetType()));
+            return;
+        }
+
+        if (typeof(T).Equals(typeof(Exception)))
+            Assert.Fail("Expected exception but no exception was thrown.");
+        else
+            Assert.Fail($"Expected exception of type {typeof(T)} but no exception was thrown.");
     }
 }

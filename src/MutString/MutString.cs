@@ -2,13 +2,21 @@
 using System.Runtime.CompilerServices;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace Celezt.String;
 
 ///<summary>
 /// Mutable <see cref="string"/>.
 ///</summary>
-public struct MutString : IEquatable<MutString>
+#if !NETSTANDARD1_3
+[Serializable]
+#endif
+public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnumerable<char>, IEquatable<MutString>
+#if !NETSTANDARD1_3
+    , ICloneable 
+ #endif
 {
     private const int DEFAULT_CAPACITY = 16;
 
@@ -24,26 +32,35 @@ public struct MutString : IEquatable<MutString>
     public int Length
     {
         get => _bufferPos;
-        set => _bufferPos = value;
+        set
+        {
+            if (value > Capacity || value < 0)
+                throw new ArgumentOutOfRangeException("value");
+
+            _bufferPos = value;
+        }
     }
 
     public int Capacity => _capacity;
 
+    public bool IsEmpty => _bufferPos == 0;
+
     public Memory<char> Memory => _buffer.AsMemory(0, _bufferPos);
     public Span<char> Span => _buffer.AsSpan(0, _bufferPos);
+    public ReadOnlySpan<char> ReadOnlySpan => _buffer.AsSpan(0, _bufferPos);
 
     public char this[int index]
     {
         get
         {
-            if (index > _bufferPos || 0 > index)
+            if (index > _bufferPos || index < 0)
                 throw new IndexOutOfRangeException();
 
             return _buffer[index];
         }
         set
         {
-            if (index > _bufferPos || 0 > index)
+            if (index > _bufferPos || index < 0)
                 throw new ArgumentOutOfRangeException("index");
 
             _buffer[index] = value;
@@ -57,6 +74,20 @@ public struct MutString : IEquatable<MutString>
 #if NET6_0_OR_GREATER
     public MutString() : this(DEFAULT_CAPACITY) { }
 #endif
+    public MutString(MutString other)
+    {
+        if (!other.IsEmpty)
+        {
+            _capacity = other._capacity;
+            _buffer = _arrayPool.Rent(other._capacity);
+            this.Append(other);
+        }
+        else
+        {
+            _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
+            _capacity = _buffer.Length;
+        }
+    }
     public MutString(int initialCapacity)
     {
         int capacity = initialCapacity > 0 ? initialCapacity : DEFAULT_CAPACITY;
@@ -95,44 +126,6 @@ public struct MutString : IEquatable<MutString>
         }
     }
 
-    public bool IsEmpty() => _bufferPos == 0;
-
-    ///<summary>
-    /// Clears values, and append new <see cref="string"/> without memory allocation.
-    ///</summary>
-    public void Set(string str)
-    {
-        Clear();
-        Append(str);
-    }
-    ///<summary>
-    /// Clears values, and append new <see cref="char[]"/> without memory allocation.
-    ///</summary>
-    public void Set(char[] value) => Set(value.AsSpan());
-    ///<summary>
-    /// Clears values, and append new <see cref="ReadOnlySpan{char}"/> without memory allocation.
-    ///</summary>
-    public void Set(ReadOnlySpan<char> value)
-    {
-        Clear();
-        Append(value);
-    }
-    ///<summary>
-    /// Clears values, and append new values. Will allocate a little memory due to boxing.
-    ///</summary>
-    public void Set(params object[] values)
-    {
-        Clear();
-
-        for (int i = 0; i < values.Length; i++)
-            Append(values[i]);
-    }
-
-    ///<summary>
-    /// Sets buffer pointer to zero.
-    ///</summary>
-    public void Clear() => _bufferPos = 0;
-
     ///<summary>
     /// Appends a new line.
     ///</summary>
@@ -146,6 +139,20 @@ public struct MutString : IEquatable<MutString>
         Append(Environment.NewLine);
     }
 
+    ///<summary>
+    /// Appends a <see cref="MutString"/> without memory allocation.
+    ///</summary>
+    public void Append(MutString value)
+    {
+        int n = value.Length;
+        if (n > 0)
+        {
+            EnsureCapacity(n);
+
+            value.Span.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
+            _bufferPos += n;
+        }
+    }
     ///<summary>
     /// Allocates on the array's creation, and on boxing values.
     ///</summary>
@@ -343,6 +350,50 @@ public struct MutString : IEquatable<MutString>
     public void Append(double value, CultureInfo culture) => Append(value.ToString(culture));
 
     ///<summary>
+    /// Clears values, and append new <see cref="MutString"/> without memory allocation.
+    ///</summary>
+    public void Set(MutString other)
+    {
+        Clear();
+        Append(other);
+    }
+    ///<summary>
+    /// Clears values, and append new <see cref="string"/> without memory allocation.
+    ///</summary>
+    public void Set(string str)
+    {
+        Clear();
+        Append(str);
+    }
+    ///<summary>
+    /// Clears values, and append new <see cref="char[]"/> without memory allocation.
+    ///</summary>
+    public void Set(char[] value) => Set(value.AsSpan());
+    ///<summary>
+    /// Clears values, and append new <see cref="ReadOnlySpan{char}"/> without memory allocation.
+    ///</summary>
+    public void Set(ReadOnlySpan<char> value)
+    {
+        Clear();
+        Append(value);
+    }
+    ///<summary>
+    /// Clears values, and append new values. Will allocate a little memory due to boxing.
+    ///</summary>
+    public void Set(params object[] values)
+    {
+        Clear();
+
+        for (int i = 0; i < values.Length; i++)
+            Append(values[i]);
+    }
+
+    ///<summary>
+    /// Sets buffer pointer to zero.
+    ///</summary>
+    public void Clear() => _bufferPos = 0;
+
+    ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
     public void Replace(string oldStr, string newStr)
@@ -456,11 +507,64 @@ public struct MutString : IEquatable<MutString>
         return true;
     }
 
-    /// <summary>
-    /// Get a new instance of <see cref="MutString"/>
-    /// </summary>
-    public static MutString Create(int initialCapacity = DEFAULT_CAPACITY) => new MutString(initialCapacity);
+    #region Implementations
+    public IEnumerator<char> GetEnumerator()
+    {
+        for (int i = 0; i < _bufferPos; i++)
+            yield return _buffer[i];
+    }
 
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+    int IComparable<MutString>.CompareTo(MutString other) => this.CompareTo(other, StringComparison.Ordinal);
+    int IComparable.CompareTo(object obj)
+    {
+        if (obj == null)
+            return -1;
+
+        if (obj is MutString mut)
+            return this.CompareTo(mut, StringComparison.Ordinal);
+
+        throw new ArgumentException($"Object is not a {nameof(MutString)}.");
+    }
+
+#if !NETSTANDARD1_3
+    object ICloneable.Clone() => this.Clone();
+#endif
+    #endregion
+
+    #region Static
+    /// <summary>
+    /// Gets a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(int initialCapacity = MutString.DEFAULT_CAPACITY) => new MutString(initialCapacity);
+    /// <summary>
+    /// Gets a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(MutString other) => new MutString(other);
+    /// <summary>
+    /// Gets a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(string other) => new MutString(other);
+    /// <summary>
+    /// Gets a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(ReadOnlySpan<char> other) => new MutString(other);
+    /// <summary>
+    /// Gets a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(char[] other) => new MutString(other);
+
+    /// <summary>
+    /// Clones existing <see cref="MutString"/> to a new instance with a new buffer.
+    /// </summary>
+    public static MutString Clone(MutString toClone) => toClone.Clone();
+
+    public static int CompareTo(MutString span, MutString other, StringComparison comparisonType)
+        => span.CompareTo(other, comparisonType);
+    #endregion
+
+    #region Operators
     public static implicit operator MutString(string value) => new MutString(value);
     public static implicit operator MutString(char[] value) => new MutString(value);
     public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
@@ -480,7 +584,9 @@ public struct MutString : IEquatable<MutString>
     public static bool operator !=(MutString lhs, string rhs) => !(lhs == rhs);
     public static bool operator ==(string lhs, MutString rhs) => lhs.AsSpan() == rhs;
     public static bool operator !=(string lhs, MutString rhs) => !(lhs == rhs);
+    #endregion
 
+    #region Private
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Append(ulong value, bool isNegative)
     {
@@ -558,4 +664,5 @@ public struct MutString : IEquatable<MutString>
 
         return 20;
     }
+    #endregion
 }
