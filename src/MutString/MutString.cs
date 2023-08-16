@@ -9,8 +9,6 @@ using System.Runtime.InteropServices;
 using System.Diagnostics.CodeAnalysis;
 using System.Buffers;
 
-[assembly: InternalsVisibleTo("Benchmark")]
-[assembly: InternalsVisibleTo("MutString.Tests")]
 namespace Celezt.String;
 
 ///<summary>
@@ -34,6 +32,9 @@ public struct MutString
         get => _bufferPos;
         set => _bufferPos = value;
     }
+
+    public Memory<char> Memory => _buffer.AsMemory(0, _bufferPos);
+    public Span<char> Span => _buffer.AsSpan(0, _bufferPos);
 
     public char this[int index]
     {
