@@ -1,12 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
+﻿using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
-using System.Text;
 using System;
-using System.Runtime.InteropServices;
-using System.Diagnostics.CodeAnalysis;
 using System.Buffers;
 
 namespace Celezt.String;
@@ -33,6 +27,8 @@ public struct MutString
         set => _bufferPos = value;
     }
 
+    public int Capacity => _capacity;
+
     public Memory<char> Memory => _buffer.AsMemory(0, _bufferPos);
     public Span<char> Span => _buffer.AsSpan(0, _bufferPos);
 
@@ -56,7 +52,7 @@ public struct MutString
 
     private char[] _buffer;
     private int _bufferPos;
-    private int _charsCapacity;
+    private int _capacity;
 
 #if NET6_0_OR_GREATER
     public MutString() : this(DEFAULT_CAPACITY) { }
@@ -65,7 +61,7 @@ public struct MutString
     {
         int capacity = initialCapacity > 0 ? initialCapacity : DEFAULT_CAPACITY;
         _buffer = _arrayPool.Rent(capacity);
-        _charsCapacity = _buffer.Length;
+        _capacity = _buffer.Length;
     }
     public MutString(string value)
     {
@@ -73,28 +69,54 @@ public struct MutString
         {
             int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
             _buffer = _arrayPool.Rent(capacity);
-            _charsCapacity = _buffer.Length;
+            _capacity = _buffer.Length;
             this.Append(value);
         }
         else
         {
             _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
-            _charsCapacity = _buffer.Length;
+            _capacity = _buffer.Length;
+        }
+    }
+    public MutString(char[] value) : this(value != null ? value.AsSpan() : Span<char>.Empty) { }
+    public MutString(ReadOnlySpan<char> value)
+    {
+        if (!value.IsEmpty)
+        {
+            int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
+            _buffer = _arrayPool.Rent(capacity);
+            _capacity = _buffer.Length;
+            this.Append(value);
+        }
+        else
+        {
+            _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
+            _capacity = _buffer.Length;
         }
     }
 
     public bool IsEmpty() => _bufferPos == 0;
 
     ///<summary>
-    /// Sets a string without memory allocation.
+    /// Clears values, and append new <see cref="string"/> without memory allocation.
     ///</summary>
     public void Set(string str)
     {
-        // Fills the _chars list to manage future appends, but we also directly set the final stringGenerated.
         Clear();
         Append(str);
     }
-
+    ///<summary>
+    /// Clears values, and append new <see cref="char[]"/> without memory allocation.
+    ///</summary>
+    public void Set(char[] value) => Set(value.AsSpan());
+    ///<summary>
+    /// Clears values, and append new <see cref="ReadOnlySpan{char}"/> without memory allocation.
+    ///</summary>
+    public void Set(ReadOnlySpan<char> value)
+    {
+        Clear();
+        Append(value);
+    }
     ///<summary>
     /// Clears values, and append new values. Will allocate a little memory due to boxing.
     ///</summary>
@@ -191,7 +213,7 @@ public struct MutString
     ///</summary>
     public void Append(char value)
     {
-        if (_bufferPos >= _charsCapacity)
+        if (_bufferPos >= _capacity)
             EnsureCapacity(1);
 
         _buffer[_bufferPos++] = value;
@@ -211,15 +233,22 @@ public struct MutString
     ///</summary>
     public void Append(char[] value)
     {
-        if (value != null)
+        if (value == null)
+            return;
+
+        Append(value.AsSpan());
+    }
+    ///<summary>
+    /// Appends a <see cref="ReadOnlySpan{char}"/> without memory allocation.
+    ///</summary> 
+    public void Append(ReadOnlySpan<char> value)
+    {
+        int n = value.Length;
+        if (n > 0)
         {
-            int n = value.Length;
-            if (n > 0)
-            {
-                EnsureCapacity(n);
-                new Span<char>(value).TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
-                _bufferPos += n;
-            }
+            EnsureCapacity(n);
+            value.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
+            _bufferPos += n;
         }
     }
     ///<summary>
@@ -434,6 +463,11 @@ public struct MutString
     /// </summary>
     public static MutString Create(int initialCapacity = DEFAULT_CAPACITY) => new MutString(initialCapacity);
 
+    public static implicit operator MutString(string value) => new MutString(value);
+    public static implicit operator MutString(char[] value) => new MutString(value);
+    public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
+    public static implicit operator MutString(Span<char> value) => new MutString(value);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Append(ulong value, bool isNegative)
     {
@@ -469,7 +503,7 @@ public struct MutString
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int appendLength)
     {
-        int capacity = _charsCapacity;
+        int capacity = _capacity;
         int pos = _bufferPos;
         if (pos + appendLength > capacity)
         {
@@ -482,7 +516,7 @@ public struct MutString
             _arrayPool.Return(_buffer);
 
             _buffer = newBuffer;
-            _charsCapacity = newBuffer.Length;
+            _capacity = newBuffer.Length;
         }
     }
 

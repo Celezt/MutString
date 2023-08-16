@@ -17,18 +17,19 @@ public class MutStringTest
     {
         var ms = new MutString();
         ms = new MutString(0);
+        Assert.AreEqual("", ms.ToString());
         ms = new MutString(-32);
-        ms = new MutString(null);
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
+        ms = new MutString((string)null);
+        Assert.AreEqual("", ms.ToString());
+        ms = new MutString((char[])null);
+        Assert.AreEqual("", ms.ToString());
+        ms = new MutString(ReadOnlySpan<char>.Empty);
+        Assert.AreEqual("", ms.ToString());
         ms = new MutString("");
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
         ms = new MutString("Hello");
-        Assert.AreEqual(ms.ToString(), "Hello");
-    }
-
-    private static string GetString(char c)
-    {
-        return new string(c, 1000);
+        Assert.AreEqual("Hello", ms.ToString());
     }
 
     [TestMethod]
@@ -42,10 +43,10 @@ public class MutStringTest
         var ms = new MutString();
         ms.Append(chars);
 
-        Assert.AreEqual(ms.ToString(), str);
+        Assert.AreEqual(str, ms.ToString());
 
-        Assert.AreEqual(ms.Length, str.Length);
-        Assert.AreEqual(ms.ToString().Length, ms.Length);
+        Assert.AreEqual(str.Length, ms.Length);
+        Assert.AreEqual(ms.Length, ms.ToString().Length);
 
 
         ms.Clear();
@@ -54,25 +55,41 @@ public class MutStringTest
         var quadByteString = "𝟘";
 
         ms.Append(singleByteString);
-        Assert.AreEqual(ms.ToString(), singleByteString);
+        Assert.AreEqual(singleByteString, ms.ToString());
 
         ms.Append(doubleByteString);
-        Assert.AreEqual(ms.ToString(), singleByteString+ doubleByteString);
+        Assert.AreEqual(singleByteString + doubleByteString, ms.ToString());
 
         ms.Append(quadByteString);
-        Assert.AreEqual(ms.ToString(), singleByteString + doubleByteString+ quadByteString);
+        Assert.AreEqual(singleByteString + doubleByteString + quadByteString, ms.ToString());
+    }
+
+    [TestMethod]
+    public void TestCapacity()
+    {
+        var ms = new MutString();
+
+        Assert.AreEqual(16, ms.Capacity);
+
+        ms.Append("Hello");
+        Assert.AreEqual(16, ms.Capacity);
+
+        ms.Append("Hello beautiful world!");
+        Assert.AreEqual(64, ms.Capacity);
     }
 
     [TestMethod]
     public void TestMutStringThreaded()
     {
+        static string GetString(char c) => new string(c, 1000);
+
         var list = new System.Collections.Concurrent.ConcurrentDictionary<int,string>();
         System.Threading.Tasks.Parallel.For(0, 1000, (i) =>
         {
             var fs = new MutString(1);
             fs.Append(GetString((char)(48 + (i % 10))));
             list.TryAdd(i, fs.ToString());
-    });
+        });
 
         var dic = list.ToArray();
         for(var i = 0; i < 1000; i++)
@@ -112,10 +129,10 @@ public class MutStringTest
         Assert.IsTrue(ms.IsEmpty());
         ms.Append("Hello");
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "Hello");
+        Assert.AreEqual("Hello", ms.ToString());
         ms.Clear();
         Assert.IsTrue(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
     }
 
     [TestMethod]
@@ -124,11 +141,11 @@ public class MutStringTest
         var ms = MutString.Create();
         ms.Append("Hello");
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "Hello");
+        Assert.AreEqual("Hello", ms.ToString());
         ms = MutString.Create(32);
         ms.Append("Hello");
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "Hello");
+        Assert.AreEqual("Hello", ms.ToString());
     }
 
     [TestMethod]
@@ -151,7 +168,7 @@ public class MutStringTest
         ms1.Append("Hello");
         Assert.IsTrue(ms1.Equals(ms));
 
-        Assert.IsFalse(ms1.Equals(null));
+        Assert.IsFalse(ms1.Equals((string)null));
 
         var sb2 = ms;
         Assert.IsTrue(sb2.Equals(ms));
@@ -219,9 +236,9 @@ public class MutStringTest
         }
 
 
-        Assert.AreEqual(ms[1], 'b');
+        Assert.AreEqual('b', ms[1]);
         ms[1] = 'z';
-        Assert.AreEqual(ms[1], 'z');
+        Assert.AreEqual('z', ms[1]);
     }
 
     [TestMethod]
@@ -229,16 +246,16 @@ public class MutStringTest
     {
         var ms = MutString.Create();
         ms.Append<int>(null);
-        Assert.AreEqual(ms.Length, 0);
+        Assert.AreEqual(0, ms.Length);
         ms.Append<string>("", null, "1");
-        Assert.AreEqual(ms.Length, 1);
+        Assert.AreEqual(1, ms.Length);
         ms.Clear();
         ms.Append<int>(1, 2, 3, 4, 5);
-        Assert.AreEqual(ms.Length, 5);
+        Assert.AreEqual(5, ms.Length);
         ms.Clear();
 
         ms.Append<int>(1);
-        Assert.AreEqual(ms.Length, 1);
+        Assert.AreEqual(1, ms.Length);
     }
 
     [TestMethod]
@@ -265,120 +282,120 @@ public class MutStringTest
         ms.Clear();
         Assert.IsTrue(ms.Length == 0);
         ms.Append(true);
-        Assert.AreEqual(ms.ToString(), "True");
+        Assert.AreEqual("True", ms.ToString());
 
         ms.Clear();
         ms.Append(false);
-        Assert.AreEqual(ms.ToString(), "False");
+        Assert.AreEqual("False", ms.ToString());
 
 
         ms.Clear();
         ms.Append("a");
-        Assert.AreEqual(ms.ToString(), "a");
+        Assert.AreEqual("a", ms.ToString());
 
         ms.Clear();
         ms.Append("ab");
-        Assert.AreEqual(ms.ToString(), "ab");
+        Assert.AreEqual("ab", ms.ToString());
 
 
         ms.Clear();
         ms.Append("abc");
-        Assert.AreEqual(ms.ToString(), "abc");
+        Assert.AreEqual("abc", ms.ToString());
 
         ms.Clear();
         ms.Append("abcd");
-        Assert.AreEqual(ms.ToString(), "abcd");
+        Assert.AreEqual("abcd", ms.ToString());
 
         ms.Clear();
         ms.Append(0);
-        Assert.AreEqual(ms.ToString(), "0");
+        Assert.AreEqual("0", ms.ToString());
 
         ms.Clear();
         ms.Append(Convert.ToByte('a'));
-        Assert.AreEqual(ms.ToString(), Convert.ToByte('a').ToString());
+        Assert.AreEqual(Convert.ToByte('a').ToString(), ms.ToString());
 
         ms.Clear();
         ms.Append((sbyte)Convert.ToByte('a'));
-        Assert.AreEqual(ms.ToString(), ((sbyte)Convert.ToByte('a')).ToString());
+        Assert.AreEqual(((sbyte)Convert.ToByte('a')).ToString(), ms.ToString());
 
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         var dt = DateTime.Now;
         ms.Clear();
         ms.Append(dt);
-        Assert.AreEqual(ms.ToString(), dt.ToString());
+        Assert.AreEqual(dt.ToString(), ms.ToString());
 
         ms.Clear();
         ms.Append((float)1.1234);
-        Assert.AreEqual(ms.ToString(), "1.1234");
+        Assert.AreEqual("1.1234", ms.ToString());
 
         ms.Clear();
         ms.Append(1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
 
         ms.Clear();
         ms.Append(-1000);
-        Assert.AreEqual(ms.ToString(), "-1000");
+        Assert.AreEqual("-1000", ms.ToString());
 
         ms.Clear();
         ms.Append((decimal)0);
-        Assert.AreEqual(ms.ToString(), "0");
+        Assert.AreEqual("0", ms.ToString());
 
         ms.Clear();
         ms.Append((decimal)1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
 
         ms.Clear();
         ms.Append((decimal)-1000.123);
-        Assert.AreEqual(ms.ToString(), "-1000.123");
+        Assert.AreEqual("-1000.123", ms.ToString());
 
 
         ms.Clear();
         ms.Append((decimal)100000.123456789);
-        Assert.AreEqual(ms.ToString(), "100000.123456789");
+        Assert.AreEqual("100000.123456789", ms.ToString());
 
         ms.Clear();
         ms.Append((double)100000.123456789);
-        Assert.AreEqual(ms.ToString(), "100000.123456789");
+        Assert.AreEqual("100000.123456789", ms.ToString());
 
         ms.Clear();
         ms.Append((double)-123412342.123);
-        Assert.AreEqual(ms.ToString(), "-123412342.123");
+        Assert.AreEqual("-123412342.123", ms.ToString());
 
 
         ms.Clear();
         ms.Append((long)0);
-        Assert.AreEqual(ms.ToString(), "0");
+        Assert.AreEqual("0", ms.ToString());
 
         ms.Clear();
         ms.Append((long)1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
         ms.Clear();
         ms.Append((long)-1000);
-        Assert.AreEqual(ms.ToString(), "-1000");
+        Assert.AreEqual("-1000", ms.ToString());
 
         ms.Clear();
         ms.Append((short)1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
 
         ms.Clear();
         ms.Append((ulong)1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
 
         ms.Clear();
         ms.Append((uint)1000);
-        Assert.AreEqual(ms.ToString(), "1000");
+        Assert.AreEqual("1000", ms.ToString());
 
         ms.Clear();
         ms.Append((object)"Hello");
-        Assert.AreEqual(ms.ToString(), "Hello");
+        Assert.AreEqual("Hello", ms.ToString());
 
         ms.Clear();
         ms.Append((object)null);
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
 
         ms.Clear();
         ms.Append(new char[] { 'h', 'i' });
-        Assert.AreEqual(ms.ToString(), "hi");
+        Assert.AreEqual("hi", ms.ToString());
 
         ms = MutString.Create();
         for(var i = 0; i < 1000; i++)
@@ -415,48 +432,48 @@ public class MutStringTest
         var ms = MutString.Create();
         ms.Append("ABCabcABCdefgABC");
         ms.Replace("ABC", "123");
-        Assert.AreEqual(ms.ToString(), "123abc123defg123");
+        Assert.AreEqual("123abc123defg123", ms.ToString());
 
         ms.Clear();
         ms.Append("ABCabcABCdefgABC");
         ms.Replace("A", "123");
-        Assert.AreEqual(ms.ToString(), "123BCabc123BCdefg123BC");
+        Assert.AreEqual("123BCabc123BCdefg123BC", ms.ToString());
 
         ms.Replace("1", "one");
-        Assert.AreEqual(ms.ToString(), "one23BCabcone23BCdefgone23BC");
+        Assert.AreEqual("one23BCabcone23BCdefgone23BC", ms.ToString());
 
         ms.Replace("2", "");
-        Assert.AreEqual(ms.ToString(), "one3BCabcone3BCdefgone3BC");
+        Assert.AreEqual("one3BCabcone3BCdefgone3BC", ms.ToString());
 
         ms.Replace("3", "4");
-        Assert.AreEqual(ms.ToString(), "one4BCabcone4BCdefgone4BC");
+        Assert.AreEqual("one4BCabcone4BCdefgone4BC", ms.ToString());
 
 
         ms.Replace("one", "1");
-        Assert.AreEqual(ms.ToString(), "14BCabc14BCdefg14BC");
+        Assert.AreEqual("14BCabc14BCdefg14BC", ms.ToString());
 
         ms.Replace("1", null);
-        Assert.AreEqual(ms.ToString(), "4BCabc4BCdefg4BC");
+        Assert.AreEqual("4BCabc4BCdefg4BC", ms.ToString());
 
         ms.Clear();
         ms.Append("abc");
         ms.Replace("", "justin");
-        Assert.AreEqual(ms.ToString(), "abc");
+        Assert.AreEqual("abc", ms.ToString());
 
         ms.Replace(null, "justin");
-        Assert.AreEqual(ms.ToString(), "abc");
+        Assert.AreEqual("abc", ms.ToString());
 
         ms.Replace("z", "justin");
-        Assert.AreEqual(ms.ToString(), "abc");
+        Assert.AreEqual("abc", ms.ToString());
 
         ms.Replace("z", "");
-        Assert.AreEqual(ms.ToString(), "abc");
+        Assert.AreEqual("abc", ms.ToString());
 
         ms.Replace("abc", "");
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
 
         ms.Replace("abc", null);
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
     }
 
     [TestMethod]
@@ -466,20 +483,20 @@ public class MutStringTest
         ms.Append("Hello World");
         ms.Set("Hi");
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "Hi");
+        Assert.AreEqual("Hi", ms.ToString());
 
 
         ms.Set("123", "45");
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "12345");
+        Assert.AreEqual("12345", ms.ToString());
 
         ms.Set(null, "",123);
         Assert.IsFalse(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "123");
+        Assert.AreEqual("123", ms.ToString());
 
         ms.Set(null, "", null);
         Assert.IsTrue(ms.IsEmpty());
-        Assert.AreEqual(ms.ToString(), "");
+        Assert.AreEqual("", ms.ToString());
     }
 
     [TestMethod]
@@ -487,13 +504,25 @@ public class MutStringTest
     {
         var ms = MutString.Create();
 
-        ms.Append("Hello World");
+        ms.Set("Hello World");
         Assert.IsTrue(MemoryExtensions.Equals(ms.Span, "Hello World", StringComparison.Ordinal));
         Assert.IsTrue(MemoryExtensions.Equals(ms.Memory.Span, "Hello World", StringComparison.Ordinal));
 
-        ms.Clear();
-        ms.Append("Hello");
+        ms.Set("Hello");
         Assert.IsTrue(MemoryExtensions.Equals(ms.Span, "Hello", StringComparison.Ordinal));
         Assert.IsTrue(MemoryExtensions.Equals(ms.Memory.Span, "Hello", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    public void TextImplicitCast()
+    {
+        MutString Implicit(MutString mut) => mut;
+
+        var ms = MutString.Create();
+
+        Assert.AreEqual(new MutString("Hello"), Implicit("Hello"));
+        Assert.AreEqual(new MutString("Hello"), Implicit("Hello".AsSpan()));
+        Assert.AreEqual(new MutString("Hello"), Implicit(new char[] { 'H', 'e', 'l', 'l', 'o' }));
+        Assert.AreEqual(new MutString("Hello"), Implicit((new char[] { 'H', 'e', 'l', 'l', 'o' }).AsSpan()));
     }
 }
