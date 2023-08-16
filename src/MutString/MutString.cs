@@ -85,41 +85,6 @@ public struct MutString
     public bool IsEmpty() => _bufferPos == 0;
 
     ///<summary>
-    /// Allocates a string.
-    ///</summary>
-    public override string ToString()
-    {
-        if (_bufferPos == 0)
-            return string.Empty;
-
-        unsafe
-        {
-            fixed (char* sourcePtr = &_buffer[0])
-                return new string(sourcePtr, 0, _bufferPos);
-        }
-    }
-
-    public override bool Equals(object obj) => obj is MutString ? Equals((MutString)obj) : false;
-    public bool Equals(MutString other)
-    {
-        // Check for same reference.
-        if (ReferenceEquals(this, other))
-            return true;
-
-        // Check for same Id and same Values.
-        if (other.Length != this.Length)
-            return false;
-
-        for (var i = 0; i < _bufferPos; i++)
-        {
-            if (!this._buffer[i].Equals(other._buffer[i]))
-                return false;
-        }
-
-        return true;
-    }
-
-    ///<summary>
     /// Sets a string without memory allocation.
     ///</summary>
     public void Set(string str)
@@ -347,38 +312,6 @@ public struct MutString
     ///</summary>
     public void Append(double value, CultureInfo culture) => Append(value.ToString(culture));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Append(ulong value, bool isNegative)
-    {
-        // Allocate enough memory to handle any ulong number.
-        int length = GetIntLength(value);
-
-
-        EnsureCapacity(length + (isNegative ? 1 : 0));
-        var buffer = _buffer;
-
-        // Handle the negative case.
-        if (isNegative)
-        {
-            buffer[_bufferPos++] = '-';
-        }
-        if (value <= 9)
-        {
-            //between 0-9.
-            buffer[_bufferPos++] = _charNumbers[value];
-            return;
-        }
-
-        // Copy the digits with reverse in mind.
-        _bufferPos += length;
-        int nbChars = _bufferPos - 1;
-        do
-        {
-            buffer[nbChars--] = _charNumbers[value % 10];
-            value /= 10;
-        } while (value != 0);
-    }
-
     ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
@@ -448,6 +381,90 @@ public struct MutString
         }
     }
 
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int hash = 0;
+            for (var i = 0; i < _bufferPos; i++)
+                hash += _buffer[i].GetHashCode();
+
+            return 31 * hash + _bufferPos;
+        }
+    }
+
+    ///<summary>
+    /// Allocates a string.
+    ///</summary>
+    public override string ToString()
+    {
+        if (_bufferPos == 0)
+            return string.Empty;
+
+        unsafe
+        {
+            fixed (char* sourcePtr = &_buffer[0])
+                return new string(sourcePtr, 0, _bufferPos);
+        }
+    }
+
+    public override bool Equals(object obj) => obj is MutString ? Equals((MutString)obj) : false;
+    public bool Equals(MutString other)
+    {
+        // Check for same reference.
+        if (ReferenceEquals(this, other))
+            return true;
+
+        // Check for same Id and same Values.
+        if (other.Length != this.Length)
+            return false;
+
+        for (var i = 0; i < _bufferPos; i++)
+        {
+            if (!this._buffer[i].Equals(other._buffer[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Get a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(int initialCapacity = DEFAULT_CAPACITY) => new MutString(initialCapacity);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Append(ulong value, bool isNegative)
+    {
+        // Allocate enough memory to handle any ulong number.
+        int length = GetIntLength(value);
+
+
+        EnsureCapacity(length + (isNegative ? 1 : 0));
+        var buffer = _buffer;
+
+        // Handle the negative case.
+        if (isNegative)
+        {
+            buffer[_bufferPos++] = '-';
+        }
+        if (value <= 9)
+        {
+            //between 0-9.
+            buffer[_bufferPos++] = _charNumbers[value];
+            return;
+        }
+
+        // Copy the digits with reverse in mind.
+        _bufferPos += length;
+        int nbChars = _bufferPos - 1;
+        do
+        {
+            buffer[nbChars--] = _charNumbers[value % 10];
+            value /= 10;
+        } while (value != 0);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int appendLength)
     {
@@ -467,24 +484,6 @@ public struct MutString
             _charsCapacity = newBuffer.Length;
         }
     }
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            int hash = 0;
-            for (var i = 0; i < _bufferPos; i++)
-                hash += _buffer[i].GetHashCode();
-
-            return 31 * hash + _bufferPos;
-        }
-    }
-
-    /// <summary>
-    /// Get a new instance of <see cref="MutString"/>
-    /// </summary>
-    public static MutString Create(int initialCapacity = DEFAULT_CAPACITY) => new MutString(initialCapacity);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetIntLength(ulong n)
