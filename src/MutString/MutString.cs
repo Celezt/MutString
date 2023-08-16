@@ -14,14 +14,20 @@ using System.Buffers;
 namespace Celezt.String;
 
 ///<summary>
-/// Mutable String class, optimised for speed and memory allocations while retrieving the final result as a string.
-/// Similarly to StringBuilder, but avoid a lot of allocations done by StringBuilder (conversion of int and float to string, frequent capacity change, etc.).
+/// Mutable <see cref="string"/>.
 ///</summary>
-public class MutString
+public struct MutString
 {
+    private const int DEFAULT_CAPACITY = 16;
+
     private readonly static CultureInfo _defaultCulture = CultureInfo.InvariantCulture;
     private readonly static ArrayPool<char> _arrayPool = ArrayPool<char>.Shared;
     private readonly static char[] _charNumbers = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    private readonly static char[][] _bool = new char[2][]
+    {
+        new char[]{ 'F','a','l','s','e'},
+        new char[]{ 'T', 'r','u','e' }
+    };
 
     public int Length
     {
@@ -47,43 +53,31 @@ public class MutString
         }
     }
 
-    private char[] _buffer = null;
-    private int _bufferPos = 0;
-    private int _charsCapacity = 0;
-    private const int DefaultCapacity = 16;
+    private char[] _buffer;
+    private int _bufferPos;
+    private int _charsCapacity;
 
-#pragma warning disable HAA0501 // Explicit new array type allocation
-    private readonly static char[][] s_bool = new char[2][]
-#pragma warning restore HAA0501 // Explicit new array type allocation
-{
-        new char[]{ 'F','a','l','s','e'},
-        new char[]{ 'T', 'r','u','e' }
-};
-
-    /// <summary>
-    /// Get a new instance of <see cref="MutString"/>
-    /// </summary>
-    public static MutString Create(int initialCapacity = DefaultCapacity) => new MutString(initialCapacity);
-
-    public MutString(int initialCapacity = DefaultCapacity)
+#if NET6_0_OR_GREATER
+    public MutString() : this(DEFAULT_CAPACITY) { }
+#endif
+    public MutString(int initialCapacity)
     {
-        int capacity = initialCapacity > 0 ? initialCapacity : DefaultCapacity;
+        int capacity = initialCapacity > 0 ? initialCapacity : DEFAULT_CAPACITY;
         _buffer = _arrayPool.Rent(capacity);
         _charsCapacity = _buffer.Length;
     }
-
     public MutString(string value)
     {
         if (value != null)
         {
-            int capacity = value.Length > 0 ? value.Length : DefaultCapacity;
+            int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
             _buffer = _arrayPool.Rent(capacity);
             _charsCapacity = _buffer.Length;
             this.Append(value);
         }
         else
         {
-            _buffer = _arrayPool.Rent(DefaultCapacity);
+            _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
             _charsCapacity = _buffer.Length;
         }
     }
@@ -105,13 +99,9 @@ public class MutString
         }
     }
 
-    public override bool Equals(object obj) => Equals(obj as MutString);
+    public override bool Equals(object obj) => obj is MutString ? Equals((MutString)obj) : false;
     public bool Equals(MutString other)
     {
-        // Check for null.
-        if (other is null)
-            return false;
-
         // Check for same reference.
         if (ReferenceEquals(this, other))
             return true;
@@ -153,25 +143,25 @@ public class MutString
     ///<summary>
     /// Sets buffer pointer to zero.
     ///</summary>
-    public MutString Clear()
-    {
-        _bufferPos = 0;
-        return this;
-    }
+    public void Clear() => _bufferPos = 0;
 
     ///<summary>
     /// Appends a new line.
     ///</summary>
-    public MutString AppendLine() => Append(Environment.NewLine);
+    public void AppendLine() => Append(Environment.NewLine);
     ///<summary>
     /// Appends a string and new line without memory allocation.
     ///</summary>
-    public MutString AppendLine(string value) => Append(value).Append(Environment.NewLine);
+    public void AppendLine(string value)
+    {
+        Append(value);
+        Append(Environment.NewLine);
+    }
 
     ///<summary>
     /// Allocates on the array's creation, and on boxing values.
     ///</summary>
-    public MutString Append(params object[] values)
+    public void Append(params object[] values)
     {
         if (values != null)
         {
@@ -179,13 +169,11 @@ public class MutString
             for (var i = 0; i < len; i++)
                 this.Append<object>(values[i]);
         }
-
-        return this;
     }
     ///<summary>
     /// Allocates on the array's creation.
     ///</summary>
-    public MutString Append<T>(params T[] values)
+    public void Append<T>(params T[] values)
     {
         if (values != null)
         {
@@ -193,8 +181,6 @@ public class MutString
             for (var i = 0; i < len; i++)
                 Append(values[i]);
         }
-
-        return this;
     }
     private void Append<T>(T value)
     {
@@ -223,7 +209,7 @@ public class MutString
     ///<summary>
     /// Appends a <see cref="string"/> without memory allocation.
     ///</summary>
-    public MutString Append(string value)
+    public void Append(string value)
     {
         int n = value?.Length ?? 0;
         if (n > 0)
@@ -233,28 +219,31 @@ public class MutString
             value.AsSpan().TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
             _bufferPos += n;
         }
-
-        return this;
     }
     ///<summary> 
     /// Appends a <see cref="char"/> without memory allocation.
     ///</summary>
-    public MutString Append(char value)
+    public void Append(char value)
     {
         if (_bufferPos >= _charsCapacity)
             EnsureCapacity(1);
 
         _buffer[_bufferPos++] = value;
-        return this;
     }
     ///<summary>
     /// Appends a <see cref="bool"/> without memory allocation.
     ///</summary>
-    public MutString Append(bool value) => value ? Append(s_bool[1]) : Append(s_bool[0]);
+    public void Append(bool value)
+    {
+        if (value)
+            Append(_bool[1]);
+        else
+            Append(_bool[0]);
+    }
     ///<summary>
     /// Appends a <see cref="char"/>[] without memory allocation.
     ///</summary>
-    public MutString Append(char[] value)
+    public void Append(char[] value)
     {
         if (value != null)
         {
@@ -266,106 +255,100 @@ public class MutString
                 _bufferPos += n;
             }
         }
-
-        return this;
     }
     ///<summary>
     /// Appends an <see cref="object.ToString()"/>. Allocates memory.
     ///</summary>
-    public MutString Append(object value)
+    public void Append(object value)
     {
         if (value is null)
-            return this;
+            return;
 
-        return Append(value.ToString());
+        Append(value.ToString());
     }
     ///<summary>
     /// Appends an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
-    public MutString Append(DateTime value) => Append(value, _defaultCulture);
+    public void Append(DateTime value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
-    public MutString Append(DateTime value, CultureInfo culture) => Append(value.ToString(culture));
+    public void Append(DateTime value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends an <see cref="sbyte"/> without memory allocation.
     ///</summary>
-    public MutString Append(sbyte value)
+    public void Append(sbyte value)
     {
         if (value < 0)
-            return Append((ulong)-((int)value), true);
-
-        return Append((ulong)value, false);
+            Append((ulong)-((int)value), true);
+        else
+            Append((ulong)value, false);
     }
     ///<summary>
     /// Appends an <see cref="byte"/> without memory allocation.
     ///</summary>
-    public MutString Append(byte value) => Append(value, false);
+    public void Append(byte value) => Append(value, false);
     ///<summary>
     /// Appends an <see cref="uint"/> without memory allocation.
     ///</summary>
-    public MutString Append(uint value) => Append((ulong)value, false);
+    public void Append(uint value) => Append((ulong)value, false);
     /// <summary>
     /// Appends a <see cref="ulong"/> without memory allocation.
     ///</summary>
-    public MutString Append(ulong value) => Append(value, false);
+    public void Append(ulong value) => Append(value, false);
     ///<summary>
     /// Appends an <see cref="short"/> without memory allocation.
     ///</summary>
-    public MutString Append(short value) => Append((int)value);
+    public void Append(short value) => Append((int)value);
     ///<summary>
     /// Appends an <see cref="int"/> without memory allocation.
     ///</summary>
-    public MutString Append(int value)
+    public void Append(int value)
     {
         bool isNegative = value < 0;
         if (isNegative)
-        {
             value = -value;
-        }
 
-        return Append((ulong)value, isNegative);
+        Append((ulong)value, isNegative);
     }
     ///<summary>
     /// Appends an <see cref="long"/> without memory allocation.
     ///</summary>
-    public MutString Append(long value)
+    public void Append(long value)
     {
         bool isNegative = value < 0;
         if (isNegative)
-        {
             value = -value;
-        }
 
-        return Append((ulong)value, isNegative);
+        Append((ulong)value, isNegative);
     }
     ///<summary>
     /// Appends a <see cref="float"/>. Allocates memory.
     ///</summary>
-    public MutString Append(float value) => Append(value, _defaultCulture);
+    public void Append(float value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="float"/>. Allocates memory.
     ///</summary>
-    public MutString Append(float value, CultureInfo culture) => Append(value.ToString(culture));
+    public void Append(float value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends a <see cref="decimal"/>. Allocates memory.
     ///</summary>
-    public MutString Append(decimal value) => Append(value, _defaultCulture);
+    public void Append(decimal value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="decimal"/>. Allocates memory.
     ///</summary>
-    public MutString Append(decimal value, CultureInfo culture) => Append(value.ToString(culture));
+    public void Append(decimal value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends a <see cref="double"/>. Allocates memory.
     ///</summary>
-    public MutString Append(double value) => Append(value, _defaultCulture);
+    public void Append(double value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="double"/>. Allocates memory.
     ///</summary>
-    public MutString Append(double value, CultureInfo culture) => Append(value.ToString(culture));
+    public void Append(double value, CultureInfo culture) => Append(value.ToString(culture));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private MutString Append(ulong value, bool isNegative)
+    private void Append(ulong value, bool isNegative)
     {
         // Allocate enough memory to handle any ulong number.
         int length = GetIntLength(value);
@@ -383,7 +366,7 @@ public class MutString
         {
             //between 0-9.
             buffer[_bufferPos++] = _charNumbers[value];
-            return this;
+            return;
         }
 
         // Copy the digits with reverse in mind.
@@ -394,21 +377,19 @@ public class MutString
             buffer[nbChars--] = _charNumbers[value % 10];
             value /= 10;
         } while (value != 0);
-
-        return this;
     }
 
     ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
-    public MutString Replace(string oldStr, string newStr)
+    public void Replace(string oldStr, string newStr)
     {
         if (_bufferPos == 0)
-            return this;
+            return;
 
         int oldstrLength = oldStr?.Length ?? 0;
         if (oldstrLength == 0)
-            return this;
+            return;
 
         if (newStr == null)
             newStr = "";
@@ -465,8 +446,6 @@ public class MutString
             _arrayPool.Return(replacementChars);
             _bufferPos = index;
         }
-
-        return this;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,7 +455,7 @@ public class MutString
         int pos = _bufferPos;
         if (pos + appendLength > capacity)
         {
-            capacity = capacity + appendLength + DefaultCapacity - (capacity - pos);
+            capacity = capacity + appendLength + DEFAULT_CAPACITY - (capacity - pos);
             char[] newBuffer = _arrayPool.Rent(capacity);
 
             if (pos > 0)
@@ -500,6 +479,12 @@ public class MutString
             return 31 * hash + _bufferPos;
         }
     }
+
+    /// <summary>
+    /// Get a new instance of <see cref="MutString"/>
+    /// </summary>
+    public static MutString Create(int initialCapacity = DEFAULT_CAPACITY) => new MutString(initialCapacity);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetIntLength(ulong n)

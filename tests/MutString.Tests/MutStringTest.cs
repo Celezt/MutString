@@ -439,16 +439,6 @@ public class MutStringTest
         sb.Replace("1", null);
         Assert.AreEqual(sb.ToString(), "4BCabc4BCdefg4BC");
 
-
-        sb.Clear();
-        Assert.AreEqual(sb.Replace(null,"HI"), sb);
-
-        Assert.AreEqual(sb.Replace("", "HI"), sb);
-
-        Assert.AreEqual(sb.Replace("", null), sb);
-
-        Assert.AreEqual(sb.Replace(null, null), sb);
-
         sb.Clear();
         sb.Append("abc");
         sb.Replace("", "justin");
