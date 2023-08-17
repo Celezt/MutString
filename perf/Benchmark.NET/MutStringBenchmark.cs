@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Celezt.String;
 using BenchmarkDotNet.Order;
 
-[MemoryDiagnoser, Orderer(SummaryOrderPolicy.FastestToSlowest), RankColumn]
+[MemoryDiagnoser, Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class MutStringBenchmark
 {
     #region Standard
@@ -36,6 +36,15 @@ public class MutStringBenchmark
     }
 
     [Benchmark]
+    public string StringReplace()
+    {
+        return "PI= 3,141592653589793 _373= 373 True 32767 z"
+            .Replace("373", "5428")
+            .Replace("St Paul", "HOT")
+            .Replace("z", "LAST");
+    }
+
+    [Benchmark]
     public string StringBuilderAppend()
     {
         return new StringBuilder()
@@ -50,9 +59,9 @@ public class MutStringBenchmark
     }
 
     [Benchmark]
-    public string StringBuilderAppend128()
+    public string StringBuilderAppend64()
     {
-        return new StringBuilder(128)
+        return new StringBuilder(64)
             .Append("PI=")
             .Append(Math.PI)
             .Append("_373=")
@@ -64,35 +73,51 @@ public class MutStringBenchmark
     }
 
     [Benchmark]
-    public string MutStringAppend()
+    public string StringBuilderReplace()
     {
-        var ms = new MutString();
-
-        ms.Append("PI=");
-        ms.Append(Math.PI);
-        ms.Append("_373=");
-        ms.Append(373);
-        ms.Append(true);
-        ms.Append(short.MaxValue);
-        ms.Append('z');
-
-        return ms.ToString();
+        return new StringBuilder("PI= 3,141592653589793 _373= 373 True 32767 z")
+            .Replace("373", "5428")
+            .Replace("St Paul", "HOT")
+            .Replace("z", "LAST")
+            .ToString();
     }
 
     [Benchmark]
-    public string MutStringAppend128()
+    public string MutStringAppend()
     {
-        var ms = new MutString(128);
+        return new MutString()
+            .Append("PI=")
+            .Append(Math.PI)
+            .Append("_373=")
+            .Append(373)
+            .Append(true)
+            .Append(short.MaxValue)
+            .Append('z')
+            .ToString();
+    }
 
-        ms.Append("PI=");
-        ms.Append(Math.PI);
-        ms.Append("_373=");
-        ms.Append(373);
-        ms.Append(true);
-        ms.Append(short.MaxValue);
-        ms.Append('z');
+    [Benchmark]
+    public string MutStringAppend64()
+    {
+        return new MutString(64)
+            .Append("PI=")
+            .Append(Math.PI)
+            .Append("_373=")
+            .Append(373)
+            .Append(true)
+            .Append(short.MaxValue)
+            .Append('z')
+            .ToString();
+    }
 
-        return ms.ToString();
+    [Benchmark]
+    public string MutStringReplace()
+    {
+        return new MutString("PI= 3,141592653589793 _373= 373 True 32767 z")
+            .Replace("373", "5428")
+            .Replace("St Paul", "HOT")
+            .Replace("z", "LAST")
+            .ToString();
     }
     #endregion
 

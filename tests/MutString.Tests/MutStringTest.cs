@@ -559,18 +559,21 @@ public class MutStringTest
     }
 
     [TestMethod]
-    public void TextImplicitCast()
+    public void TestImplicitCast()
     {
         MutString Implicit(MutString mut) => mut;
 
-        Assert.AreEqual(new MutString("Hello"), Implicit("Hello"));
-        Assert.AreEqual(new MutString("Hello"), Implicit("Hello".AsSpan()));
-        Assert.AreEqual(new MutString("Hello"), Implicit(new char[] { 'H', 'e', 'l', 'l', 'o' }));
-        Assert.AreEqual(new MutString("Hello"), Implicit((new char[] { 'H', 'e', 'l', 'l', 'o' }).AsSpan()));
+        var ms = new MutString("Hello");
+        var chr = new char[] { 'H', 'e', 'l', 'l', 'o' };
+
+        Assert.AreEqual(ms, Implicit("Hello"));
+        Assert.AreEqual(ms, Implicit("Hello".AsSpan()));
+        Assert.AreEqual(ms, Implicit(chr));
+        Assert.AreEqual(ms, Implicit(chr.AsSpan()));
     }
 
     [TestMethod]
-    public void TextComparisonOperators()
+    public void TestComparisonOperators()
     {
         var ms = MutString.Create("Hello");
         var ms2 = ms;

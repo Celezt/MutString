@@ -13,7 +13,7 @@ namespace Celezt.String;
 #if !NETSTANDARD1_3
 [Serializable]
 #endif
-public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnumerable<char>, IEquatable<MutString>
+public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnumerable<char>, IEquatable<MutString>
 #if !NETSTANDARD1_3
     , ICloneable 
  #endif
@@ -41,7 +41,7 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         }
     }
 
-    public int Capacity => _capacity;
+    public int Capacity => _buffer.Length;
 
     public bool IsEmpty => _bufferPos == 0;
 
@@ -69,30 +69,24 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
 
     private char[] _buffer;
     private int _bufferPos;
-    private int _capacity;
 
-#if NET6_0_OR_GREATER
     public MutString() : this(DEFAULT_CAPACITY) { }
-#endif
-    public MutString(MutString other)
+    public MutString(MutString? other)
     {
-        if (!other.IsEmpty)
+        if (other is not null)
         {
-            _capacity = other._capacity;
-            _buffer = _arrayPool.Rent(other._capacity);
+            _buffer = _arrayPool.Rent(other.Capacity);
             this.Append(other);
         }
         else
         {
             _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
-            _capacity = _buffer.Length;
         }
     }
     public MutString(int initialCapacity)
     {
         int capacity = initialCapacity > 0 ? initialCapacity : DEFAULT_CAPACITY;
         _buffer = _arrayPool.Rent(capacity);
-        _capacity = _buffer.Length;
     }
     public MutString(string value)
     {
@@ -100,13 +94,11 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         {
             int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
             _buffer = _arrayPool.Rent(capacity);
-            _capacity = _buffer.Length;
             this.Append(value);
         }
         else
         {
             _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
-            _capacity = _buffer.Length;
         }
     }
     public MutString(char[] value) : this(value != null ? value.AsSpan() : Span<char>.Empty) { }
@@ -116,34 +108,37 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         {
             int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
             _buffer = _arrayPool.Rent(capacity);
-            _capacity = _buffer.Length;
             this.Append(value);
         }
         else
         {
             _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
-            _capacity = _buffer.Length;
         }
     }
 
     ///<summary>
     /// Appends a new line.
     ///</summary>
-    public void AppendLine() => Append(Environment.NewLine);
+    public MutString AppendLine() => Append(Environment.NewLine);
     ///<summary>
     /// Appends a string and new line without memory allocation.
     ///</summary>
-    public void AppendLine(string value)
+    public MutString AppendLine(string value)
     {
         Append(value);
         Append(Environment.NewLine);
+
+        return this;
     }
 
     ///<summary>
     /// Appends a <see cref="MutString"/> without memory allocation.
     ///</summary>
-    public void Append(MutString value)
+    public MutString Append(MutString? value)
     {
+        if (value is null)
+            return this;
+
         int n = value.Length;
         if (n > 0)
         {
@@ -152,11 +147,13 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             value.Span.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
             _bufferPos += n;
         }
+
+        return this;
     }
     ///<summary>
     /// Allocates on the array's creation, and on boxing values.
     ///</summary>
-    public void Append(params object[] values)
+    public MutString Append(params object[] values)
     {
         if (values != null)
         {
@@ -164,11 +161,13 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             for (var i = 0; i < len; i++)
                 this.Append<object>(values[i]);
         }
+
+        return this;
     }
     ///<summary>
     /// Appends values. Allocates when boxing.
     ///</summary>
-    public void Append<T>(params T[] values)
+    public MutString Append<T>(params T[] values)
     {
         if (values != null)
         {
@@ -176,18 +175,20 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             for (var i = 0; i < len; i++)
                 Append(values[i]);
         }
+
+        return this;
     }
     ///<summary>
     /// Appends <see cref="{T}"/>. Allocates when boxing.
     ///</summary>
-    private void Append<T>(T value)
+    private MutString Append<T>(T value)
     {
-        if (value == null)
-            return;
+        if (value is null)
+            return this;
 
         switch (value)
         {
-            case string: Append(value as string); break;
+            case string: Append((string)(object)value); break;
             case char: Append((char)(object)value); break;
             case char[]: Append((char[])(object)value); break;
             case int: Append((int)(object)value); break;
@@ -203,12 +204,17 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             case uint: Append((uint)(object)value); break;
             default: Append(value.ToString()); break;
         }
+
+        return this;
     }
     ///<summary>
     /// Appends a <see cref="string"/> without memory allocation.
     ///</summary>
-    public void Append(string value)
+    public MutString Append(string? value)
     {
+        if (value is null)
+            return this;
+
         int n = value?.Length ?? 0;
         if (n > 0)
         {
@@ -217,41 +223,49 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             value.AsSpan().TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
             _bufferPos += n;
         }
+
+        return this;
     }
     ///<summary> 
     /// Appends a <see cref="char"/> without memory allocation.
     ///</summary>
-    public void Append(char value)
+    public MutString Append(char value)
     {
-        if (_bufferPos >= _capacity)
+        if (_bufferPos >= Capacity)
             EnsureCapacity(1);
 
         _buffer[_bufferPos++] = value;
+
+        return this;
     }
     ///<summary>
     /// Appends a <see cref="bool"/> without memory allocation.
     ///</summary>
-    public void Append(bool value)
+    public MutString Append(bool value)
     {
         if (value)
             Append(_bool[1]);
         else
             Append(_bool[0]);
+
+        return this;
     }
     ///<summary>
     /// Appends a <see cref="char"/>[] without memory allocation.
     ///</summary>
-    public void Append(char[] value)
+    public MutString Append(char[] value)
     {
         if (value == null)
-            return;
+            return this;
 
         Append(value.AsSpan());
+
+        return this;
     }
     ///<summary>
     /// Appends a <see cref="ReadOnlySpan{char}"/> without memory allocation.
     ///</summary> 
-    public void Append(ReadOnlySpan<char> value)
+    public MutString Append(ReadOnlySpan<char> value)
     {
         int n = value.Length;
         if (n > 0)
@@ -260,135 +274,153 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             value.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
             _bufferPos += n;
         }
+
+        return this;
     }
     ///<summary>
     /// Appends an <see cref="object.ToString()"/>. Allocates memory.
     ///</summary>
-    public void Append(object value)
+    public MutString Append(object? value)
     {
         if (value is null)
-            return;
+            return this;
 
         Append(value.ToString());
+
+        return this;
     }
     ///<summary>
     /// Appends an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
-    public void Append(DateTime value) => Append(value, _defaultCulture);
+    public MutString Append(DateTime value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
-    public void Append(DateTime value, CultureInfo culture) => Append(value.ToString(culture));
+    public MutString Append(DateTime value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends an <see cref="sbyte"/> without memory allocation.
     ///</summary>
-    public void Append(sbyte value)
+    public MutString Append(sbyte value)
     {
         if (value < 0)
             Append((ulong)-((int)value), true);
         else
             Append((ulong)value, false);
+
+        return this;
     }
     ///<summary>
     /// Appends an <see cref="byte"/> without memory allocation.
     ///</summary>
-    public void Append(byte value) => Append(value, false);
+    public MutString Append(byte value) => Append(value, false);
     ///<summary>
     /// Appends an <see cref="uint"/> without memory allocation.
     ///</summary>
-    public void Append(uint value) => Append((ulong)value, false);
+    public MutString Append(uint value) => Append((ulong)value, false);
     /// <summary>
     /// Appends a <see cref="ulong"/> without memory allocation.
     ///</summary>
-    public void Append(ulong value) => Append(value, false);
+    public MutString Append(ulong value) => Append(value, false);
     ///<summary>
     /// Appends an <see cref="short"/> without memory allocation.
     ///</summary>
-    public void Append(short value) => Append((int)value);
+    public MutString Append(short value) => Append((int)value);
     ///<summary>
     /// Appends an <see cref="int"/> without memory allocation.
     ///</summary>
-    public void Append(int value)
+    public MutString Append(int value)
     {
         bool isNegative = value < 0;
         if (isNegative)
             value = -value;
 
         Append((ulong)value, isNegative);
+
+        return this;
     }
     ///<summary>
     /// Appends an <see cref="long"/> without memory allocation.
     ///</summary>
-    public void Append(long value)
+    public MutString Append(long value)
     {
         bool isNegative = value < 0;
         if (isNegative)
             value = -value;
 
         Append((ulong)value, isNegative);
+
+        return this;
     }
     ///<summary>
     /// Appends a <see cref="float"/>. Allocates memory.
     ///</summary>
-    public void Append(float value) => Append(value, _defaultCulture);
+    public MutString Append(float value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="float"/>. Allocates memory.
     ///</summary>
-    public void Append(float value, CultureInfo culture) => Append(value.ToString(culture));
+    public MutString Append(float value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends a <see cref="decimal"/>. Allocates memory.
     ///</summary>
-    public void Append(decimal value) => Append(value, _defaultCulture);
+    public MutString Append(decimal value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="decimal"/>. Allocates memory.
     ///</summary>
-    public void Append(decimal value, CultureInfo culture) => Append(value.ToString(culture));
+    public MutString Append(decimal value, CultureInfo culture) => Append(value.ToString(culture));
     ///<summary>
     /// Appends a <see cref="double"/>. Allocates memory.
     ///</summary>
-    public void Append(double value) => Append(value, _defaultCulture);
+    public MutString Append(double value) => Append(value, _defaultCulture);
     ///<summary>
     /// Appends a <see cref="double"/>. Allocates memory.
     ///</summary>
-    public void Append(double value, CultureInfo culture) => Append(value.ToString(culture));
+    public MutString Append(double value, CultureInfo culture) => Append(value.ToString(culture));
 
     ///<summary>
     /// Clears values, and append new <see cref="MutString"/> without memory allocation.
     ///</summary>
-    public void Set(MutString other)
+    public MutString Set(MutString other)
     {
         Clear();
         Append(other);
+
+        return this;
     }
     ///<summary>
     /// Clears values, and append new <see cref="string"/> without memory allocation.
     ///</summary>
-    public void Set(string str)
+    public MutString Set(string str)
     {
         Clear();
         Append(str);
+
+        return this;
     }
     ///<summary>
     /// Clears values, and append new <see cref="char[]"/> without memory allocation.
     ///</summary>
-    public void Set(char[] value) => Set(value.AsSpan());
+    public MutString Set(char[] value) => Set(value.AsSpan());
     ///<summary>
     /// Clears values, and append new <see cref="ReadOnlySpan{char}"/> without memory allocation.
     ///</summary>
-    public void Set(ReadOnlySpan<char> value)
+    public MutString Set(ReadOnlySpan<char> value)
     {
         Clear();
         Append(value);
+
+        return this;
     }
     ///<summary>
     /// Clears values, and append new values. Will allocate a little memory due to boxing.
     ///</summary>
-    public void Set(params object[] values)
+    public MutString Set(params object[] values)
     {
         Clear();
 
         for (int i = 0; i < values.Length; i++)
             Append(values[i]);
+
+        return this;
     }
 
     ///<summary>
@@ -399,14 +431,14 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
     ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
-    public void Replace(string oldStr, string newStr)
+    public MutString Replace(string oldStr, string newStr)
     {
         if (_bufferPos == 0)
-            return;
+            return this;
 
         int oldstrLength = oldStr?.Length ?? 0;
         if (oldstrLength == 0)
-            return;
+            return this;
 
         if (newStr == null)
             newStr = "";
@@ -416,9 +448,9 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         int deltaLength = oldstrLength > newStrLength ? oldstrLength - newStrLength : newStrLength - oldstrLength;
         int size = ((_bufferPos / oldstrLength) * (oldstrLength + deltaLength)) + 1;
         int index = 0;
-        char[] replacementChars = null;
+        char[] replacementChars = null!;
         int replaceIndex = 0;
-        char firstChar = oldStr[0];
+        char firstChar = oldStr![0];
 
         // Create the new string into _replacement.
         for (int i = 0; i < _bufferPos; i++)
@@ -463,6 +495,8 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             _arrayPool.Return(replacementChars);
             _bufferPos = index;
         }
+
+        return this;
     }
 
     public override int GetHashCode()
@@ -492,9 +526,12 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         }
     }
 
-    public override bool Equals(object obj) => obj is MutString ? Equals((MutString)obj) : false;
-    public bool Equals(MutString other)
+    public override bool Equals(object? obj) => obj is MutString ? Equals((MutString)obj) : false;
+    public bool Equals(MutString? other)
     {
+        if (other is null)
+            return false;
+
         if (ReferenceEquals(this, other))
             return true;
 
@@ -519,10 +556,10 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
 
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-    int IComparable<MutString>.CompareTo(MutString other) => this.CompareTo(other, StringComparison.Ordinal);
-    int IComparable.CompareTo(object obj)
+    int IComparable<MutString>.CompareTo(MutString? other) => this.CompareTo(other, StringComparison.Ordinal);
+    int IComparable.CompareTo(object? obj)
     {
-        if (obj == null)
+        if (obj is null)
             return -1;
 
         if (obj is MutString mut)
@@ -573,25 +610,25 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
     public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
     public static implicit operator MutString(Span<char> value) => new MutString(value);
 
-    public static bool operator ==(MutString lhs, MutString rhs) => lhs.Equals(rhs);
-    public static bool operator !=(MutString lhs, MutString rhs) => !(lhs == rhs);
-    public static bool operator ==(MutString lhs, ReadOnlySpan<char> rhs) => MemoryExtensions.Equals(lhs.Span, rhs, StringComparison.Ordinal);
-    public static bool operator !=(MutString lhs, ReadOnlySpan<char> rhs) => !(lhs == rhs);
-    public static bool operator ==(ReadOnlySpan<char> lhs, MutString rhs) => MemoryExtensions.Equals(lhs, rhs.Span, StringComparison.Ordinal);
-    public static bool operator !=(ReadOnlySpan<char> lhs, MutString rhs) => !(lhs == rhs);
-    public static bool operator ==(MutString lhs, Span<char> rhs) => lhs == (ReadOnlySpan<char>)rhs;
-    public static bool operator !=(MutString lhs, Span<char> rhs) => !(lhs == rhs);
-    public static bool operator ==(Span<char> lhs, MutString rhs) => (ReadOnlySpan<char>)lhs == rhs;
-    public static bool operator !=(Span<char> lhs, MutString rhs) => !(lhs == rhs);
-    public static bool operator ==(MutString lhs, string rhs) => lhs == rhs.AsSpan();
-    public static bool operator !=(MutString lhs, string rhs) => !(lhs == rhs);
-    public static bool operator ==(string lhs, MutString rhs) => lhs.AsSpan() == rhs;
-    public static bool operator !=(string lhs, MutString rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString? lhs, MutString? rhs) => lhs?.Equals(rhs) ?? false;
+    public static bool operator !=(MutString? lhs, MutString? rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString? lhs, ReadOnlySpan<char> rhs) => lhs is not null ? MemoryExtensions.Equals(lhs.Span, rhs, StringComparison.Ordinal) : false;
+    public static bool operator !=(MutString? lhs, ReadOnlySpan<char> rhs) => !(lhs == rhs);
+    public static bool operator ==(ReadOnlySpan<char> lhs, MutString? rhs) => rhs is not null ? MemoryExtensions.Equals(lhs, rhs.Span, StringComparison.Ordinal) : false;
+    public static bool operator !=(ReadOnlySpan<char> lhs, MutString? rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString? lhs, Span<char> rhs) => lhs == (ReadOnlySpan<char>)rhs;
+    public static bool operator !=(MutString? lhs, Span<char> rhs) => !(lhs == rhs);
+    public static bool operator ==(Span<char> lhs, MutString? rhs) => (ReadOnlySpan<char>)lhs == rhs;
+    public static bool operator !=(Span<char> lhs, MutString? rhs) => !(lhs == rhs);
+    public static bool operator ==(MutString? lhs, string? rhs) => lhs == rhs.AsSpan();
+    public static bool operator !=(MutString? lhs, string? rhs) => !(lhs == rhs);
+    public static bool operator ==(string? lhs, MutString? rhs) => lhs.AsSpan() == rhs;
+    public static bool operator !=(string? lhs, MutString? rhs) => !(lhs == rhs);
     #endregion
 
     #region Private
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Append(ulong value, bool isNegative)
+    private MutString Append(ulong value, bool isNegative)
     {
         // Allocate enough memory to handle any ulong number.
         int length = GetIntLength(value);
@@ -609,7 +646,7 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         {
             //between 0-9.
             buffer[_bufferPos++] = _charNumbers[value];
-            return;
+            return this;
         }
 
         // Copy the digits with reverse in mind.
@@ -620,12 +657,14 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             buffer[nbChars--] = _charNumbers[value % 10];
             value /= 10;
         } while (value != 0);
+
+        return this;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int appendLength)
     {
-        int capacity = _capacity;
+        int capacity = Capacity;
         int pos = _bufferPos;
         if (pos + appendLength > capacity)
         {
@@ -638,7 +677,6 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
             _arrayPool.Return(_buffer);
 
             _buffer = newBuffer;
-            _capacity = newBuffer.Length;
         }
     }
 
