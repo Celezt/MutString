@@ -29,7 +29,7 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
 
 ## Supported Platforms
 
-* .NET Core 7.0+
+* .NET Core 5.0+
 * .NET Framework 4.6+
 * .NET Standard 1.3+
 
