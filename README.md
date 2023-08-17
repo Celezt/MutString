@@ -1,5 +1,5 @@
 # MutString
-An alternative to the `System.Text.StringBuilder` C# class. Modified version of [LiteStringBuilder](https://github.com/justinamiller/LiteStringBuilder)
+An alternative to the `System.Text.StringBuilder` C# class. Modified version of [LiteStringBuilder](https://github.com/justinamiller/LiteStringBuilder).
 
 ## Why?
 Because `System.Text.StringBuilder` actually does a lot of memory allocation when appending strings, often it's just not better than a direct string `concat`. It is also not always continuous data, but instead spread out in chunks, disallowing the use of `Span`.
@@ -34,8 +34,9 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
 * .NET Standard 1.3+
 
 ## How do I use it?
-*We got your samples right here*
-### Creating MutString
+`MutString` is a struct and needs to be `Clone` to allocate a new buffer. It is modifiable directly from `Span`.
+### Creating `MutString`
+
 ```C#
     using Celezt.String;
     
@@ -50,18 +51,27 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
     
     // Can create instance with initial string value.
     var ms = new MutString("Hello World");
+    
+    // Can be cloned to instance with a new buffer.
+    var ms2 = ms.Clone();
 ```
 
-### Using MutString
+### Using `MutString`
+
 ```C#
     // Retrieve an instance from the pool.
     var ms = MutString.Create();
- 
+    
     ms.Append("Cost: ");
     ms.Append(32.11)
     ms.Append(" Sent: ")
     ms.Append(false);
+
+    ms[0] = 'A';
+    char chr = ms[0];
+
+    ms.Span.Fill('B');
     
     // Return instance of string.
     ms.ToString();
-```
+``
