@@ -166,7 +166,7 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
         }
     }
     ///<summary>
-    /// Allocates on the array's creation.
+    /// Appends values. Allocates when boxing.
     ///</summary>
     public void Append<T>(params T[] values)
     {
@@ -177,6 +177,9 @@ public struct MutString : IComparable, IComparable<MutString>, IEnumerable, IEnu
                 Append(values[i]);
         }
     }
+    ///<summary>
+    /// Appends <see cref="{T}"/>. Allocates when boxing.
+    ///</summary>
     private void Append<T>(T value)
     {
         if (value == null)
