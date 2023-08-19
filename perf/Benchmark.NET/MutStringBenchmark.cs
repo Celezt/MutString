@@ -79,6 +79,8 @@ public class MutStringBenchmark
             .Replace("373", "5428")
             .Replace("St Paul", "HOT")
             .Replace("z", "LAST")
+            .Replace("5", "")
+            .Replace("´6", "9")
             .ToString();
     }
 
@@ -117,66 +119,59 @@ public class MutStringBenchmark
             .Replace("373", "5428")
             .Replace("St Paul", "HOT")
             .Replace("z", "LAST")
+            .Replace("5", "")
+            .Replace("´6", "9")
             .ToString();
     }
     #endregion
 
-    //#region BIGString
+    #region BIGString
 
-    //private readonly static string str1 = new string('a', 1000);
-    //private readonly static string str2 = new string('b', 1000);
-    //private readonly static string str3 = new string('c', 1000);
-    //private readonly static string str4 = new string('d', 1000);
+    private readonly static string str1 = new string('a', 1000);
+    private readonly static string str2 = new string('b', 1000);
+    private readonly static string str3 = new string('c', 1000);
+    private readonly static string str4 = new string('d', 1000);
 
-    //[Benchmark]
-    //public string LargeStringInterpolated()
-    //{
-    //    string str = $"{str1} {str2}{str3}{str4}";
-    //    return str.Replace("c", "z");
-    //}
+    [Benchmark]
+    public string LargeStringInterpolated()
+    {
+        return $"{str1} {str2}{str3}{str4}";
+    }
 
-    //[Benchmark]
-    //public string LargeStringAdded()
-    //{
-    //    string str = str1 + str2 + str3 + str4;
-    //    return str.Replace("c", "z");
-    //}
+    [Benchmark]
+    public string LargeStringPlusOperation()
+    {
+        return str1 + str2 + str3 + str4;
+    }
 
-    //[Benchmark]
-    //public string LargeStringConcat()
-    //{
-    //    string str = string.Concat(str1, str2, str3, str4);
-    //    return str.Replace("c", "z");
-    //}
+    [Benchmark]
+    public string LargeStringConcat()
+    {
+        return string.Concat(str1, str2, str3, str4);
+    }
 
+    [Benchmark]
+    public string LargeStringBuilderAppend()
+    {
+        return new StringBuilder(1)
+            .Append(str1)
+            .Append(str2)
+            .Append(str3)
+            .Append(str4)
+            .ToString();
+    }
 
-    //[Benchmark]
-    //public string LargeStringBuilder()
-    //{
-    //    System.Text.StringBuilder m_strBuilder = new System.Text.StringBuilder(1);
-
-    //    m_strBuilder.Append(str1)
-    //        .Append(str2)
-    //        .Append(str3)
-    //        .Append(str4);
-
-    //    return m_strBuilder.ToString();
-    //}
-
-
-    //[Benchmark]
-    //public string LargeMutString()
-    //{
-    //    MutString mutString = new MutString(1);
-
-    //    mutString.Append(str1);
-    //    mutString.Append(str2);
-    //    mutString.Append(str3);
-    //    mutString.Append(str4);
-
-    //    return mutString.ToString();
-    //}
-    //#endregion
+    [Benchmark]
+    public string LargeMutStringAppend()
+    {
+        return new MutString(1)
+            .Append(str1)
+            .Append(str2)
+            .Append(str3)
+            .Append(str4)
+            .ToString();
+    }
+    #endregion
 
     //#region BIGArray
 

@@ -4,6 +4,8 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Celezt.String;
 
@@ -15,8 +17,8 @@ namespace Celezt.String;
 #endif
 public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnumerable<char>, IEquatable<MutString>
 #if !NETSTANDARD1_3
-    , ICloneable 
- #endif
+    , ICloneable
+#endif
 {
     private const int DEFAULT_CAPACITY = 16;
 
@@ -31,36 +33,36 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
 
     public int Length
     {
-        get => _bufferPos;
+        get => _bufferPosition;
         set
         {
             if (value > Capacity || value < 0)
                 throw new ArgumentOutOfRangeException("value");
 
-            _bufferPos = value;
+            _bufferPosition = value;
         }
     }
 
     public int Capacity => _buffer.Length;
 
-    public bool IsEmpty => _bufferPos == 0;
+    public bool IsEmpty => _bufferPosition == 0;
 
-    public Memory<char> Memory => _buffer.AsMemory(0, _bufferPos);
-    public Span<char> Span => _buffer.AsSpan(0, _bufferPos);
-    public ReadOnlySpan<char> ReadOnlySpan => _buffer.AsSpan(0, _bufferPos);
+    public Memory<char> Memory => _buffer.AsMemory(0, _bufferPosition);
+    public Span<char> Span => _buffer.AsSpan(0, _bufferPosition);
+    public ReadOnlySpan<char> ReadOnlySpan => _buffer.AsSpan(0, _bufferPosition);
 
     public char this[int index]
     {
         get
         {
-            if (index > _bufferPos || index < 0)
+            if (index > _bufferPosition || index < 0)
                 throw new IndexOutOfRangeException();
 
             return _buffer[index];
         }
         set
         {
-            if (index > _bufferPos || index < 0)
+            if (index > _bufferPosition || index < 0)
                 throw new ArgumentOutOfRangeException("index");
 
             _buffer[index] = value;
@@ -68,7 +70,7 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     }
 
     private char[] _buffer;
-    private int _bufferPos;
+    private int _bufferPosition;
 
     public MutString() : this(DEFAULT_CAPACITY) { }
     public MutString(MutString? other)
@@ -144,8 +146,8 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         {
             EnsureCapacity(n);
 
-            value.Span.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
-            _bufferPos += n;
+            value.Span.TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            _bufferPosition += n;
         }
 
         return this;
@@ -188,21 +190,21 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
 
         switch (value)
         {
-            case string: Append((string)(object)value); break;
-            case char: Append((char)(object)value); break;
-            case char[]: Append((char[])(object)value); break;
-            case int: Append((int)(object)value); break;
-            case long: Append((long)(object)value); break;
-            case bool: Append((bool)(object)value); break;
-            case DateTime: Append((DateTime)(object)value); break;
-            case decimal: Append((decimal)(object)value); break;
-            case float: Append((float)(object)value); break;
-            case double: Append((double)(object)value); break;
-            case byte: Append((byte)(object)value); break;
-            case sbyte: Append((sbyte)(object)value); break;
-            case ulong: Append((ulong)(object)value); break;
-            case uint: Append((uint)(object)value); break;
-            default: Append(value.ToString()); break;
+            case string:    Append(Unsafe.As<string>(value)); break;
+            case char[]:    Append(Unsafe.As<char[]>(value)); break;
+            case char:      Append((char)(object)value); break;
+            case int:       Append((int)(object)value); break;
+            case long:      Append((long)(object)value); break;
+            case bool:      Append((bool)(object)value); break;
+            case DateTime:  Append((DateTime)(object)value); break;
+            case decimal:   Append((decimal)(object)value); break;
+            case float:     Append((float)(object)value); break;
+            case double:    Append((double)(object)value); break;
+            case byte:      Append((byte)(object)value); break;
+            case sbyte:     Append((sbyte)(object)value); break;
+            case ulong:     Append((ulong)(object)value); break;
+            case uint:      Append((uint)(object)value); break;
+            default:        Append(value.ToString()); break;
         }
 
         return this;
@@ -220,8 +222,8 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         {
             EnsureCapacity(n);
 
-            value.AsSpan().TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
-            _bufferPos += n;
+            value.AsSpan().TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            _bufferPosition += n;
         }
 
         return this;
@@ -231,10 +233,10 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     ///</summary>
     public MutString Append(char value)
     {
-        if (_bufferPos >= Capacity)
+        if (_bufferPosition >= Capacity)
             EnsureCapacity(1);
 
-        _buffer[_bufferPos++] = value;
+        _buffer[_bufferPosition++] = value;
 
         return this;
     }
@@ -271,8 +273,8 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         if (n > 0)
         {
             EnsureCapacity(n);
-            value.TryCopyTo(new Span<char>(_buffer, _bufferPos, n));
-            _bufferPos += n;
+            value.TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            _bufferPosition += n;
         }
 
         return this;
@@ -426,74 +428,130 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     ///<summary>
     /// Sets buffer pointer to zero.
     ///</summary>
-    public void Clear() => _bufferPos = 0;
+    public void Clear() => _bufferPosition = 0;
 
+    ///<summary>
+    /// Replaces all occurrences of a <see cref="char"/> by another one.
+    ///</summary>
+    public MutString Replace(char oldChar, char newChar)
+    {
+        if (oldChar == newChar)
+            return this;
+
+        Span<char> bufferSpan = _buffer.AsSpan();
+        ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
+
+        int firstIndex = IndexOfChar(ref bufferRef, oldChar, bufferSpan.Length);
+
+        if (firstIndex < 0)
+            return this;
+
+        int remainingLength = _bufferPosition - firstIndex;
+        int length = firstIndex;
+
+        // Copy the remaining characters, doing the replacement as we go.
+        ref ushort remainingRef = ref Unsafe.Add(ref Unsafe.As<char, ushort>(ref bufferRef), length);
+
+        for (int i = 0; i < remainingLength; ++i)
+        {
+            ushort currentChar = Unsafe.Add(ref remainingRef, i);
+            Unsafe.Add(ref remainingRef, i) = currentChar == oldChar ? newChar : currentChar;
+        }
+
+        return this;
+    }
     ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
-    public MutString Replace(string oldStr, string newStr)
+    public MutString Replace(string oldValue, string? newValue)
     {
-        if (_bufferPos == 0)
+        if (string.IsNullOrEmpty(oldValue))
+            throw new ArgumentNullException(nameof(oldValue));
+
+        newValue ??= string.Empty;
+
+        Replace(oldValue.AsSpan(), newValue.AsSpan());
+
+        return this;
+    }
+    ///<summary>
+    /// Replaces all occurrences of a <see cref="ReadOnlySpan{char}"/> by another one.
+    ///</summary>
+    public MutString Replace(ReadOnlySpan<char> oldValue, ReadOnlySpan<char> newValue)
+    {
+        if (_bufferPosition == 0)
             return this;
 
-        int oldstrLength = oldStr?.Length ?? 0;
-        if (oldstrLength == 0)
+        if (oldValue.Length == 0)
             return this;
 
-        if (newStr == null)
-            newStr = "";
+        if (oldValue.Length == 1 && newValue.Length == 1)   // If both old and new is just one character.
+            return Replace(oldValue[0], newValue[0]);
 
-        int newStrLength = newStr.Length;
-
-        int deltaLength = oldstrLength > newStrLength ? oldstrLength - newStrLength : newStrLength - oldstrLength;
-        int size = ((_bufferPos / oldstrLength) * (oldstrLength + deltaLength)) + 1;
+        // Only allocate what can possible be fit.
+        Span<int> replacementIndices = stackalloc int[_bufferPosition / (newValue.Length == 0 ? 1 : newValue.Length)];
+        Span<char> bufferSpan = _buffer.AsSpan();
+        ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
+        char firstChar = oldValue[0];
+        int indicesLength = 0;
         int index = 0;
-        char[] replacementChars = null!;
-        int replaceIndex = 0;
-        char firstChar = oldStr![0];
 
-        // Create the new string into _replacement.
-        for (int i = 0; i < _bufferPos; i++)
+        if (oldValue.Length == 1)
         {
-            bool isToReplace = false;
-            if (_buffer[i] == firstChar) // If first character found, check for the rest of the string to replace.
+            while (true)
             {
-                int k = 1; // Skip one char.
-                while (k < oldstrLength && _buffer[i + k] == oldStr[k])
-                    k++;
+                int position = IndexOfChar(ref Unsafe.Add(ref bufferRef, index), firstChar, bufferSpan.Length - index);
 
-                isToReplace = (k == oldstrLength);
+                if (position < 0)
+                    break;
+
+                replacementIndices[indicesLength++] = index + position;
+                index += position + 1;
             }
-            if (isToReplace) // Do the replacement.
+        }
+        else
+        {
+            ref char oldRef = ref MemoryMarshal.GetReference(oldValue);
+            while (true)
             {
-                if (replaceIndex == 0)
+                int pos = IndexOf(ref Unsafe.Add(ref bufferRef, index), Length - index, ref oldRef, oldValue.Length);
+                if (pos < 0)
                 {
-                    // First replacement target.
-                    replacementChars = _arrayPool.Rent(size);
-                    // Copy first set of char that did not match.
-                    new Span<char>(_buffer, 0, i).TryCopyTo(new Span<char>(replacementChars, 0, i));
-                    index = i;
+                    break;
                 }
-
-                replaceIndex++;
-                i += oldstrLength - 1;
-
-                for (int k = 0; k < newStrLength; k++)
-                    replacementChars[index++] = newStr[k];
+                replacementIndices[indicesLength++] = index + pos;
+                index += pos + oldValue.Length;
             }
-            else if (replaceIndex > 0) // No replacement, copy the old character.
-                replacementChars[index++] = _buffer[i]; // Todo: Could batch these up instead one at a time!
         }
 
-        if (replaceIndex > 0)
+        if (indicesLength == 0) // If no oldValues where found.
+            return this;
+
+        replacementIndices = replacementIndices.Slice(0, indicesLength);
+        int newLength = _bufferPosition + (newValue.Length - oldValue.Length) * indicesLength;
+
+        if (newLength > int.MaxValue)
+            throw new OutOfMemoryException();
+
+        int capacity = Capacity;
+        if (newLength > capacity)   // Needs to allocated more space.
         {
-            // Copy back the new string into _chars.
-            EnsureCapacity(index - _bufferPos);
+            capacity += newLength - capacity + DEFAULT_CAPACITY - (capacity - _bufferPosition);
 
-            new Span<char>(replacementChars, 0, index).TryCopyTo(new Span<char>(_buffer));
+            char[] newBuffer = _arrayPool.Rent(capacity);   // Rent a bigger array.
+            Span<char> newBufferSpan = newBuffer.AsSpan();
 
-            _arrayPool.Return(replacementChars);
-            _bufferPos = index;
+            CopyTo(bufferSpan, newBufferSpan, oldValue, newValue, replacementIndices);
+
+            _arrayPool.Return(_buffer);
+            _buffer = newBuffer;
+        }
+        else
+        {
+            Span<char> tempSpan = stackalloc char[_bufferPosition];
+            bufferSpan.Slice(0, _bufferPosition).CopyTo(tempSpan);
+
+            CopyTo(tempSpan, bufferSpan, oldValue, newValue, replacementIndices);
         }
 
         return this;
@@ -504,10 +562,10 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         unchecked
         {
             int hash = 0;
-            for (var i = 0; i < _bufferPos; i++)
+            for (var i = 0; i < _bufferPosition; i++)
                 hash += _buffer[i].GetHashCode();
 
-            return 31 * hash + _bufferPos;
+            return 31 * hash + _bufferPosition;
         }
     }
 
@@ -516,13 +574,13 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     ///</summary>
     public override string ToString()
     {
-        if (_bufferPos == 0)
+        if (_bufferPosition == 0)
             return string.Empty;
 
         unsafe
         {
             fixed (char* sourcePtr = &_buffer[0])
-                return new string(sourcePtr, 0, _bufferPos);
+                return new string(sourcePtr, 0, _bufferPosition);
         }
     }
 
@@ -538,7 +596,7 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         if (other.Length != this.Length)
             return false;
 
-        for (var i = 0; i < _bufferPos; i++)
+        for (var i = 0; i < _bufferPosition; i++)
         {
             if (!this._buffer[i].Equals(other._buffer[i]))
                 return false;
@@ -550,7 +608,7 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     #region Implementations
     public IEnumerator<char> GetEnumerator()
     {
-        for (int i = 0; i < _bufferPos; i++)
+        for (int i = 0; i < _bufferPosition; i++)
             yield return _buffer[i];
     }
 
@@ -640,18 +698,18 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         // Handle the negative case.
         if (isNegative)
         {
-            buffer[_bufferPos++] = '-';
+            buffer[_bufferPosition++] = '-';
         }
         if (value <= 9)
         {
             //between 0-9.
-            buffer[_bufferPos++] = _charNumbers[value];
+            buffer[_bufferPosition++] = _charNumbers[value];
             return this;
         }
 
         // Copy the digits with reverse in mind.
-        _bufferPos += length;
-        int nbChars = _bufferPos - 1;
+        _bufferPosition += length;
+        int nbChars = _bufferPosition - 1;
         do
         {
             buffer[nbChars--] = _charNumbers[value % 10];
@@ -662,22 +720,139 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureCapacity(int appendLength)
+    private void CopyTo(ReadOnlySpan<char> span, Span<char> destination,
+        ReadOnlySpan<char> oldValue, ReadOnlySpan<char> newValue, ReadOnlySpan<int> indices)
+    {
+        int currentIndex = 0;
+        int destinationIndex = 0;
+
+        for (int i = 0; i < indices.Length; i++)
+        {
+            int replacementIndex = indices[i];
+
+            // Copy over the non-matching portion of the original that precedes this occurrence of oldValue.
+            int count = replacementIndex - currentIndex;
+
+            if (count != 0)
+            {
+                span.Slice(currentIndex, count).CopyTo(destination.Slice(destinationIndex));
+                destinationIndex += count;
+            }
+            currentIndex = replacementIndex + oldValue.Length;
+
+            // Copy over newValue to replace the oldValue.
+            newValue.CopyTo(destination.Slice(destinationIndex));
+            destinationIndex += newValue.Length;
+        }
+
+        // Copy over the final non-matching portion at the end of the string.
+        span.Slice(currentIndex).CopyTo(destination.Slice(destinationIndex));
+        _bufferPosition = destinationIndex + span.Length - currentIndex;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsureCapacity(int appendedLength)
     {
         int capacity = Capacity;
-        int pos = _bufferPos;
-        if (pos + appendLength > capacity)
+        if (_bufferPosition + appendedLength > capacity)
         {
-            capacity = capacity + appendLength + DEFAULT_CAPACITY - (capacity - pos);
+            capacity += appendedLength + DEFAULT_CAPACITY - (capacity - _bufferPosition);
             char[] newBuffer = _arrayPool.Rent(capacity);
 
-            if (pos > 0)
-                new Span<char>(_buffer, 0, _bufferPos).TryCopyTo(new Span<char>(newBuffer)); // Copy data.
+            if (_bufferPosition > 0)
+                new Span<char>(_buffer, 0, _bufferPosition).TryCopyTo(new Span<char>(newBuffer)); // Copy data.
 
             _arrayPool.Return(_buffer);
 
             _buffer = newBuffer;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int IndexOfChar(ref char searchSpace, char chr, int length)
+    {
+        for (int index = 0; index < length; index++)
+            if (Unsafe.Add(ref searchSpace, index) == chr)
+                return index;
+
+        return -1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int IndexOf(ref char searchSpace, int searchSpaceLength, ref char value, int valueLength)
+    {
+        Debug.Assert(searchSpaceLength >= 0);
+        Debug.Assert(valueLength >= 0);
+
+        nint offset = 0;
+        char valueHead = value;
+        int valueTailLength = valueLength - 1;
+        int searchSpaceMinusValueTailLength = searchSpaceLength - valueTailLength;
+
+        ref byte valueTail = ref Unsafe.As<char, byte>(ref Unsafe.Add(ref value, 1));
+        int remainingSearchSpaceLength = searchSpaceMinusValueTailLength;
+
+        while(remainingSearchSpaceLength > 0)
+        {
+            // Do a quick search for the first element of "value".
+            int relativeIndex = IndexOfChar(ref Unsafe.Add(ref searchSpace, offset), valueHead, remainingSearchSpaceLength);
+            if (relativeIndex < 0)
+                break;
+
+            remainingSearchSpaceLength -= relativeIndex;
+            offset += relativeIndex;
+
+            if (remainingSearchSpaceLength <= 0)
+                break;  // The unsearched portion is now shorter than the sequence we're looking for. So it can't be there.
+            
+            // Found the first element of "value". See if the tail matches.
+            if (SequenceEqual(
+                    ref Unsafe.As<char, byte>(ref Unsafe.Add(ref searchSpace, offset + 1)),
+                    ref valueTail,
+                    (nuint)(uint)valueTailLength * 2))
+            {
+                return (int)offset;  // The tail matched. Return a successful find.
+            }
+
+            remainingSearchSpaceLength--;
+            offset++;
+        }
+
+        return -1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe bool SequenceEqual(ref byte first, ref byte second, nuint length)
+    {
+        bool result;
+
+        // On 32-bit, this will always be true since sizeof(nuint) == 4.
+        if (length < sizeof(uint))
+        {
+            uint differentBits = 0;
+            nuint offset = (length & 2);
+            if (offset != 0)
+            {
+                differentBits = Unsafe.ReadUnaligned<ushort>(ref first);
+                differentBits -= Unsafe.ReadUnaligned<ushort>(ref second);
+            }
+            if ((length & 1) != 0)
+            {
+                differentBits |= (uint)Unsafe.AddByteOffset(ref first, (IntPtr)(void*)offset) - 
+                                (uint)Unsafe.AddByteOffset(ref second, (IntPtr)(void*)offset);
+            }
+            result = (differentBits == 0);
+        }
+        else
+        {
+            nuint offset = length - sizeof(uint);
+            uint differentBits = Unsafe.ReadUnaligned<uint>(ref first) - Unsafe.ReadUnaligned<uint>(ref second);
+            differentBits |= Unsafe.ReadUnaligned<uint>(ref Unsafe.AddByteOffset(ref first, (IntPtr)(void*)offset)) - 
+                            Unsafe.ReadUnaligned<uint>(ref Unsafe.AddByteOffset(ref second, (IntPtr)(void*)offset));
+            result = (differentBits == 0);
+        }
+
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

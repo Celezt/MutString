@@ -466,7 +466,6 @@ public class MutStringTest
         ms.Replace("3", "4");
         Assert.AreEqual("one4BCabcone4BCdefgone4BC", ms.ToString());
 
-
         ms.Replace("one", "1");
         Assert.AreEqual("14BCabc14BCdefg14BC", ms.ToString());
 
@@ -475,10 +474,15 @@ public class MutStringTest
 
         ms.Clear();
         ms.Append("abc");
-        ms.Replace("", "justin");
-        Assert.AreEqual("abc", ms.ToString());
+        Throws<ArgumentNullException>(() =>
+        {
+            ms.Replace("", "justin");
+        });
 
-        ms.Replace(null, "justin");
+        Throws<ArgumentNullException>(() =>
+        {
+            ms.Replace(null, "justin");
+        });
         Assert.AreEqual("abc", ms.ToString());
 
         ms.Replace("z", "justin");
@@ -492,6 +496,20 @@ public class MutStringTest
 
         ms.Replace("abc", null);
         Assert.AreEqual("", ms.ToString());
+
+        ms.Clear();
+        ms.Append("fffffffffffffff");
+        ms.Replace("f", "");
+        Assert.AreEqual("", ms.ToString());
+
+        ms.Append("123BCabc123BCdefg123BC");
+        ms.Replace('2', '9');
+        Assert.AreEqual("193BCabc193BCdefg193BC", ms.ToString());
+
+        ms.Clear();
+        ms.Append("88888888");
+        ms.Replace('8', '1');
+        Assert.AreEqual("11111111", ms.ToString());
     }
 
     [TestMethod]
