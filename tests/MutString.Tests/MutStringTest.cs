@@ -591,6 +591,18 @@ public class MutStringTest
     }
 
     [TestMethod]
+    public void TestExplicitCast()
+    {
+        var ms = new MutString("Hello");
+        var chr = new char[] { 'H', 'e', 'l', 'l', 'o' };
+
+        Assert.AreEqual("Hello", (string)ms);
+        Assert.IsTrue(MemoryExtensions.SequenceEqual(chr.AsSpan(), (char[])ms));
+        Assert.IsTrue(MemoryExtensions.Equals("Hello", (Span<char>)ms, StringComparison.Ordinal));
+        Assert.IsTrue(MemoryExtensions.Equals("Hello", (ReadOnlySpan<char>)ms, StringComparison.Ordinal));
+    }
+
+    [TestMethod]
     public void TestComparisonOperators()
     {
         var ms = MutString.Create("Hello");

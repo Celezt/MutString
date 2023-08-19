@@ -438,7 +438,7 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
         if (oldChar == newChar)
             return this;
 
-        Span<char> bufferSpan = _buffer.AsSpan();
+        Span<char> bufferSpan = this.Span;
         ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
 
         int firstIndex = IndexOfChar(ref bufferRef, oldChar, bufferSpan.Length);
@@ -667,6 +667,22 @@ public class MutString : IComparable, IComparable<MutString>, IEnumerable, IEnum
     public static implicit operator MutString(char[] value) => new MutString(value);
     public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
     public static implicit operator MutString(Span<char> value) => new MutString(value);
+
+    public static explicit operator string(MutString value) => value.ToString();
+    public static explicit operator ReadOnlySpan<char>(MutString value) => value.ReadOnlySpan;
+    public static explicit operator Span<char>(MutString value) => value.Span;
+    public static explicit operator char[](MutString value)
+    {
+        char[] array = null;
+#if NET5_0_OR_GREATER
+        array = GC.AllocateUninitializedArray<char>(value.Length);
+#else
+        array = new char[value.Length];
+#endif
+        value.Span.CopyTo(array);
+
+        return array;
+    }
 
     public static bool operator ==(MutString? lhs, MutString? rhs) => lhs?.Equals(rhs) ?? false;
     public static bool operator !=(MutString? lhs, MutString? rhs) => !(lhs == rhs);
