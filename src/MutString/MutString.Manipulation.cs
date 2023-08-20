@@ -314,6 +314,57 @@ public partial class MutString
         return this;
     }
 
+    /// <summary>
+    /// Removes everything after start index without memory allocation. 
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public MutString Remove(int startIndex)
+    {
+        if (startIndex < 0)
+            throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+        int oldLength = _bufferPosition;
+
+        if (startIndex >= oldLength)
+            throw new ArgumentOutOfRangeException(nameof(oldLength));
+
+        _bufferPosition = startIndex + 1;
+
+        return this;
+    }
+    /// <summary>
+    /// Removes content between start index and length without memory allocation. 
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public MutString Remove(int startIndex, int length)
+    {
+        if (startIndex < 0)
+            throw new ArgumentOutOfRangeException(nameof(startIndex));
+        if (length < 0)
+            throw new ArgumentOutOfRangeException(nameof(length));
+
+        int oldLength = _bufferPosition;
+
+        if (length > oldLength - startIndex)
+            throw new ArgumentOutOfRangeException(nameof(length));
+
+        if (length == 0)
+            return this;
+         
+        int newLength = startIndex + length;
+
+        if (newLength == oldLength)
+        {
+            _bufferPosition -= length;
+            return this;
+        }
+
+        _buffer.AsSpan(startIndex + length).CopyTo(_buffer.AsSpan(startIndex));
+        _bufferPosition -= length;
+
+        return this;
+    }
+
     ///<summary>
     /// Replaces all occurrences of a <see cref="char"/> by another one.
     ///</summary>
@@ -347,6 +398,7 @@ public partial class MutString
     ///<summary>
     /// Replaces all occurrences of a <see cref="string"/> by another one.
     ///</summary>
+    ///<exception cref="ArgumentNullException"></exception>
     public MutString Replace(string oldValue, string? newValue)
     {
         if (string.IsNullOrEmpty(oldValue))
@@ -488,7 +540,7 @@ public partial class MutString
             char[] newBuffer = _arrayPool.Rent(capacity);
 
             if (_bufferPosition > 0)
-                new Span<char>(_buffer, 0, _bufferPosition).TryCopyTo(new Span<char>(newBuffer)); // Copy data.
+                _buffer.AsSpan(0, _bufferPosition).CopyTo(newBuffer); // Copy data.
 
             _arrayPool.Return(_buffer);
 

@@ -5,7 +5,7 @@ namespace Celezt.String;
 public static class MutStringExtensions
 {
     /// <summary>
-    /// Clones existing <see cref="MutString"/> to a new instance with a new buffer.
+    /// Clones existing <see cref="MutString"/> to a new instance.
     /// </summary>
     public static MutString Clone(this MutString? toClone) => new MutString(toClone);
 

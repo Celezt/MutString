@@ -3,6 +3,9 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Celezt.String;
 
@@ -70,18 +73,6 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     private int _bufferPosition;
 
     public MutString() : this(DEFAULT_CAPACITY) { }
-    public MutString(MutString? other)
-    {
-        if (other is not null)
-        {
-            _buffer = _arrayPool.Rent(other.Capacity);
-            this.Append(other);
-        }
-        else
-        {
-            _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
-        }
-    }
     public MutString(int initialCapacity)
     {
         int capacity = initialCapacity > 0 ? initialCapacity : DEFAULT_CAPACITY;
@@ -108,6 +99,18 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
             int capacity = value.Length > 0 ? value.Length : DEFAULT_CAPACITY;
             _buffer = _arrayPool.Rent(capacity);
             this.Append(value);
+        }
+        else
+        {
+            _buffer = _arrayPool.Rent(DEFAULT_CAPACITY);
+        }
+    }
+        public MutString(MutString? other)
+    {
+        if (other is not null)
+        {
+            _buffer = _arrayPool.Rent(other.Capacity);
+            this.Append(other);
         }
         else
         {

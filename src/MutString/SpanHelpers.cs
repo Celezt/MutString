@@ -8,7 +8,7 @@ public static class SpanHelpers
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CopyTo(ReadOnlySpan<char> span, Span<char> destination,
-   ReadOnlySpan<char> oldValue, ReadOnlySpan<char> newValue, ReadOnlySpan<int> indices)
+        ReadOnlySpan<char> oldValue, ReadOnlySpan<char> newValue, ReadOnlySpan<int> indices)
     {
         int currentIndex = 0;
         int destinationIndex = 0;

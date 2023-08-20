@@ -663,6 +663,43 @@ public class MutStringTest
         Assert.IsTrue(ms.CompareTo("iello world", StringComparison.OrdinalIgnoreCase) < 0);
     }
 
+    [TestMethod]
+    public void TestRemove()
+    {
+        var ms = MutString.Create("Hello World");
+
+        ms.Remove(4);
+        Assert.AreEqual("Hello", ms);
+
+        ms.Append("New Wonderful World!");
+        ms.Remove(0, 5);
+        Assert.AreEqual("New Wonderful World!", ms);
+
+        ms.Remove(13, 7);
+        Assert.AreEqual("New Wonderful", ms);
+
+        ms.Remove(4, 1);
+        Assert.AreEqual("New onderful", ms);
+
+        ms.Remove(1, 3);
+        Assert.AreEqual("Nonderful", ms);
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.Remove(-1);
+        });
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.Remove(9);
+        });
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.Remove(1, 9);
+        });
+    }
+
     public static void Throws<T>(Action task) where T : Exception
     {
         try
