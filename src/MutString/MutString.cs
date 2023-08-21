@@ -228,7 +228,7 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     public static explicit operator Span<char>(MutString value) => value.Span;
     public static explicit operator char[](MutString value)
     {
-        char[] array = null;
+        char[] array;
 #if NET5_0_OR_GREATER
         array = GC.AllocateUninitializedArray<char>(value.Length, true);
 #else

@@ -132,7 +132,7 @@ public partial class MutString
     ///<summary>
     /// Appends a <see cref="bool"/> without memory allocation.
     ///</summary>
-    public unsafe MutString AppendOld(bool value)
+    public unsafe MutString Append(bool value)
     {
 #if NET5_0_OR_GREATER
         ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
