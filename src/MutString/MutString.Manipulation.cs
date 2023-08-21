@@ -398,8 +398,11 @@ public partial class MutString
             return this;
 
         Span<char> bufferSpan = this.Span;
+#if NET5_0_OR_GREATER
+        ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
         ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
-
+#endif
         int firstIndex = SpanHelpers.IndexOfChar(ref bufferRef, oldChar, bufferSpan.Length);
 
         if (firstIndex < 0)
@@ -451,7 +454,11 @@ public partial class MutString
         // Only allocate what can possible be fit.
         Span<int> replacementIndices = stackalloc int[_bufferPosition / (newValue.Length == 0 ? 1 : newValue.Length)];
         Span<char> bufferSpan = _buffer.AsSpan();
+#if NET5_0_OR_GREATER
+        ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
         ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
+#endif
         char firstChar = oldValue[0];
         int indicesLength = 0;
         int index = 0;
