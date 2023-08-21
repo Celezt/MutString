@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Celezt.String;
 
-public static class SpanHelpers
+internal static class SpanHelpers
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CopyTo(ReadOnlySpan<char> span, Span<char> destination,

@@ -501,31 +501,57 @@ public partial class MutString
     {
         // Allocate enough memory to handle any ulong number.
         int length = GetIntLength(value);
-
-
         EnsureCapacity(length + (isNegative ? 1 : 0));
-        var buffer = _buffer;
+
+#if NET5_0_OR_GREATER
+        ref char bufferRef =  ref MemoryMarshal.GetArrayDataReference(_buffer);
 
         // Handle the negative case.
         if (isNegative)
-        {
-            buffer[_bufferPosition++] = '-';
-        }
+            Unsafe.Add(ref bufferRef, _bufferPosition++) = '-';
+
         if (value <= 9)
         {
             //between 0-9.
-            buffer[_bufferPosition++] = _charNumbers[value];
+            Unsafe.Add(ref bufferRef, _bufferPosition++) = (char)('0' + value);
+
             return this;
         }
-
-        // Copy the digits with reverse in mind.
-        _bufferPosition += length;
-        int nbChars = _bufferPosition - 1;
-        do
+        else
         {
-            buffer[nbChars--] = _charNumbers[value % 10];
-            value /= 10;
-        } while (value != 0);
+            // Copy the digits with reverse in mind.
+            _bufferPosition += length;
+            int numberCharacters = _bufferPosition - 1;
+            do
+            {
+                Unsafe.Add(ref bufferRef, numberCharacters--) = (char)('0' + value % 10);
+                value /= 10;
+            } while (value != 0);
+        }
+#else
+        Span<char> span = _buffer;
+
+        // Handle the negative case.
+        if (isNegative)
+            span[_bufferPosition++] = '-';
+
+        if (value <= 9)
+        {
+            //between 0-9.
+            span[_bufferPosition++] = (char)('0' + value);
+        }
+        else
+        {
+            // Copy the digits with reverse in mind.
+            _bufferPosition += length;
+            int numberCharacters = _bufferPosition - 1;
+            do
+            {
+                span[numberCharacters--] = (char)('0' + value % 10);
+                value /= 10;
+            } while (value != 0);
+        }
+#endif
 
         return this;
     }

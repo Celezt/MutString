@@ -24,7 +24,6 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
 
     private readonly static CultureInfo _defaultCulture = CultureInfo.InvariantCulture;
     private readonly static ArrayPool<char> _arrayPool = ArrayPool<char>.Shared;
-    private readonly static char[] _charNumbers = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
     private readonly static char[][] _bool = new char[2][]
     {
         new char[]{ 'F','a','l','s','e'},
