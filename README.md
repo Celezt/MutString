@@ -16,29 +16,29 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
   DefaultJob : .NET 7.0.10 (7.0.1023.36312), X64 RyuJIT AVX2
 ```
 
-|                      Method |      Mean |     Error |    StdDev |   Gen0 |   Gen1 | Allocated |
-|---------------------------- |----------:|----------:|----------:|-------:|-------:|----------:|
-|               StringReplace |  58.26 ns |  0.651 ns |  0.577 ns | 0.0143 |      - |     240 B |
-|       StringBuilderAppend64 | 104.48 ns |  1.092 ns |  0.968 ns | 0.0119 |      - |     200 B |
-|         StringPlusOperation | 116.64 ns |  1.024 ns |  0.855 ns | 0.0181 |      - |     304 B |
-|           MutStringAppend64 | 118.98 ns |  1.703 ns |  1.593 ns | 0.0143 |      - |     240 B |
-|         StringInterpolation | 119.53 ns |  1.366 ns |  1.211 ns | 0.0067 |      - |     112 B |
-|             MutStringAppend | 129.21 ns |  1.162 ns |  1.087 ns | 0.0143 |      - |     240 B |
-|                StringConcat | 142.30 ns |  2.013 ns |  1.883 ns | 0.0315 |      - |     528 B |
-|                  StringJoin | 156.33 ns |  1.426 ns |  1.334 ns | 0.0272 |      - |     456 B |
-|            MutStringReplace | 161.98 ns |  1.953 ns |  1.731 ns | 0.0110 |      - |     184 B |
-|         StringBuilderAppend | 206.72 ns |  0.981 ns |  0.869 ns | 0.0257 |      - |     432 B |
-|    LargeStringPlusOperation | 208.63 ns |  4.012 ns |  4.120 ns | 0.4795 |      - |    8024 B |
-|           LargeStringConcat | 210.14 ns |  4.190 ns |  4.988 ns | 0.4795 |      - |    8024 B |
-|    LargeStringBuilderAppend | 283.05 ns |  5.703 ns |  6.789 ns | 0.4959 | 0.0153 |    8296 B |
-|          PrimitiveMutString | 357.72 ns |  2.085 ns |  1.951 ns | 0.0296 |      - |     496 B |
-|       PrimitiveStringConcat | 384.43 ns |  5.285 ns |  4.944 ns | 0.0648 |      - |    1088 B |
-|        LargeMutStringAppend | 387.31 ns |  7.570 ns |  8.414 ns | 0.4935 |      - |    8248 B |
-| PrimitiveStringInterpolated | 396.32 ns |  2.445 ns |  2.287 ns | 0.0172 |      - |     288 B |
-|      PrimitiveStringBuilder | 408.63 ns |  2.105 ns |  1.866 ns | 0.0334 |      - |     560 B |
-|PrimitiveStringPlusOperation | 439.59 ns |  3.644 ns |  3.408 ns | 0.0515 |      - |     864 B |
-|     LargeStringInterpolated | 456.81 ns |  8.659 ns |  9.265 ns | 0.4792 |      - |    8024 B |
-|        StringBuilderReplace | 761.98 ns | 15.126 ns | 18.007 ns | 0.0219 |      - |     368 B |
+|                       Method |      Mean |     Error |    StdDev |   Gen0 |   Gen1 | Allocated |
+|----------------------------- |----------:|----------:|----------:|-------:|-------:|----------:|
+|                StringReplace |  58.74 ns |  0.269 ns |  0.239 ns | 0.0143 |      - |     240 B |
+|        StringBuilderAppend64 |  97.66 ns |  0.509 ns |  0.476 ns | 0.0119 |      - |     200 B |
+|            MutStringAppend64 | 111.20 ns |  0.556 ns |  0.493 ns | 0.0143 |      - |     240 B |
+|          StringPlusOperation | 114.86 ns |  0.401 ns |  0.335 ns | 0.0181 |      - |     304 B |
+|          StringInterpolation | 117.50 ns |  0.981 ns |  0.819 ns | 0.0067 |      - |     112 B |
+|              MutStringAppend | 131.50 ns |  0.499 ns |  0.466 ns | 0.0143 |      - |     240 B |
+|                 StringConcat | 141.66 ns |  1.172 ns |  1.096 ns | 0.0315 |      - |     528 B |
+|                   StringJoin | 156.69 ns |  1.015 ns |  0.950 ns | 0.0272 |      - |     456 B |
+|             MutStringReplace | 162.85 ns |  0.284 ns |  0.237 ns | 0.0110 |      - |     184 B |
+|          StringBuilderAppend | 200.80 ns |  1.231 ns |  1.152 ns | 0.0257 |      - |     432 B |
+|     LargeStringPlusOperation | 205.03 ns |  4.108 ns |  5.484 ns | 0.4795 |      - |    8024 B |
+|            LargeStringConcat | 214.53 ns |  4.170 ns |  4.283 ns | 0.4795 |      - |    8024 B |
+|     LargeStringBuilderAppend | 275.13 ns |  4.988 ns |  5.122 ns | 0.4959 | 0.0153 |    8296 B |
+|           PrimitiveMutString | 353.22 ns |  2.398 ns |  2.243 ns | 0.0296 |      - |     496 B |
+|         LargeMutStringAppend | 368.39 ns |  7.036 ns |  6.582 ns | 0.4935 |      - |    8248 B |
+|        PrimitiveStringConcat | 383.77 ns |  2.725 ns |  2.549 ns | 0.0648 |      - |    1088 B |
+|  PrimitiveStringInterpolated | 402.43 ns |  1.352 ns |  1.199 ns | 0.0172 |      - |     288 B |
+|       PrimitiveStringBuilder | 410.15 ns |  2.230 ns |  2.086 ns | 0.0334 |      - |     560 B |
+| PrimitiveStringPlusOperation | 427.88 ns |  1.576 ns |  1.316 ns | 0.0515 |      - |     864 B |
+|      LargeStringInterpolated | 440.49 ns |  8.043 ns |  7.524 ns | 0.4792 |      - |    8024 B |
+|         StringBuilderReplace | 754.67 ns | 15.028 ns | 17.306 ns | 0.0219 |      - |     368 B |
 
 ## Supported Platforms
 
@@ -58,10 +58,10 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
     // Or through static call (will create a new instance).
     var ms = MutString.Create();
     
-    // Can create instance with buffer pool size.
+    // Can create an instance with buffer pool size.
     var ms = new MutString(500);
     
-    // Can create instance with initial string value.
+    // Can create an instance with an initial string value.
     var ms = new MutString("Hello World");
     
 ```
