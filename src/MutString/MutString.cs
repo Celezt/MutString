@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Celezt.String;
+namespace Celezt.Text;
 
 ///<summary>
 /// Mutable <see cref="string"/>.

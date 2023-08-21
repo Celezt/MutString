@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Celezt.String;
+namespace Celezt.Text;
 
 public static class MutStringExtensions
 {

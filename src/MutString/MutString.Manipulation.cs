@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Celezt.String;
+namespace Celezt.Text;
 
 public partial class MutString
 {

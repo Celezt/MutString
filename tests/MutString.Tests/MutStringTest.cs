@@ -1,12 +1,11 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Threading;
 using System.Globalization;
 
-namespace Celezt.String.Tests;
+namespace Celezt.Text.Tests;
 
 [ExcludeFromCodeCoverage]
 [TestClass]

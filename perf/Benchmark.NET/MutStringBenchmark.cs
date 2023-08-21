@@ -5,7 +5,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using System.Text;
-using Celezt.String;
+using Celezt.Text;
 
 [MemoryDiagnoser, Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class MutStringBenchmark

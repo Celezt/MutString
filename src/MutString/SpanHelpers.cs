@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Celezt.String;
+namespace Celezt.Text;
 
 internal static class SpanHelpers
 {
