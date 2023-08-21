@@ -35,7 +35,7 @@ public partial class MutString
         {
             EnsureCapacity(n);
 
-            value.Span.TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            value.Span.TryCopyTo(_buffer.AsSpan(_bufferPosition, n));
             _bufferPosition += n;
         }
 
@@ -111,7 +111,7 @@ public partial class MutString
         {
             EnsureCapacity(n);
 
-            value.AsSpan().TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            value.AsSpan().CopyTo(_buffer.AsSpan(_bufferPosition, n));
             _bufferPosition += n;
         }
 
@@ -132,13 +132,37 @@ public partial class MutString
     ///<summary>
     /// Appends a <see cref="bool"/> without memory allocation.
     ///</summary>
-    public MutString Append(bool value)
+    public unsafe MutString AppendOld(bool value)
     {
-        if (value)
-            Append(_bool[1]);
-        else
-            Append(_bool[0]);
+#if NET5_0_OR_GREATER
+        ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
+        int position = _bufferPosition;
 
+        if (value)
+        {
+            EnsureCapacity(4);
+            Unsafe.Add(ref bufferRef, position++) = 'T';
+            Unsafe.Add(ref bufferRef, position++) = 'r';
+            Unsafe.Add(ref bufferRef, position++) = 'u';
+            Unsafe.Add(ref bufferRef, position++) = 'e';
+        }
+        else
+        {
+            EnsureCapacity(5);
+            Unsafe.Add(ref bufferRef, position++) = 'F';
+            Unsafe.Add(ref bufferRef, position++) = 'a';
+            Unsafe.Add(ref bufferRef, position++) = 'l';
+            Unsafe.Add(ref bufferRef, position++) = 's';
+            Unsafe.Add(ref bufferRef, position++) = 'e';
+        }
+
+        _bufferPosition = position;
+#else
+        if (value)
+            Append("True");
+        else
+            Append("False");
+#endif
         return this;
     }
     ///<summary>
@@ -162,7 +186,7 @@ public partial class MutString
         if (n > 0)
         {
             EnsureCapacity(n);
-            value.TryCopyTo(new Span<char>(_buffer, _bufferPosition, n));
+            value.TryCopyTo(_buffer.AsSpan(_bufferPosition, n));
             _bufferPosition += n;
         }
 

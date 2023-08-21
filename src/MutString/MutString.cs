@@ -24,11 +24,6 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
 
     private readonly static CultureInfo _defaultCulture = CultureInfo.InvariantCulture;
     private readonly static ArrayPool<char> _arrayPool = ArrayPool<char>.Shared;
-    private readonly static char[][] _bool = new char[2][]
-    {
-        new char[]{ 'F','a','l','s','e'},
-        new char[]{ 'T', 'r','u','e' }
-    };
 
     public int Length
     {
