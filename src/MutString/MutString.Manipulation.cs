@@ -360,31 +360,29 @@ public partial class MutString
     /// Removes content between start index and length without memory allocation. 
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public MutString Remove(int startIndex, int length)
+    public MutString Remove(int startIndex, int count)
     {
         if (startIndex < 0)
             throw new ArgumentOutOfRangeException(nameof(startIndex));
-        if (length < 0)
-            throw new ArgumentOutOfRangeException(nameof(length));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count));
 
-        int oldLength = _bufferPosition;
+        if (count > _bufferPosition - startIndex)
+            throw new ArgumentOutOfRangeException(nameof(count));
 
-        if (length > oldLength - startIndex)
-            throw new ArgumentOutOfRangeException(nameof(length));
-
-        if (length == 0)
+        if (count == 0)
             return this;
          
-        int newLength = startIndex + length;
+        int newLength = startIndex + count;
 
-        if (newLength == oldLength)
+        if (newLength == _bufferPosition)
         {
-            _bufferPosition -= length;
+            _bufferPosition -= count;
             return this;
         }
 
-        _buffer.AsSpan(startIndex + length).CopyTo(_buffer.AsSpan(startIndex));
-        _bufferPosition -= length;
+        _buffer.AsSpan(startIndex + count).CopyTo(_buffer.AsSpan(startIndex));
+        _bufferPosition -= count;
 
         return this;
     }
@@ -409,10 +407,9 @@ public partial class MutString
             return this;
 
         int remainingLength = _bufferPosition - firstIndex;
-        int length = firstIndex;
 
         // Copy the remaining characters, doing the replacement as we go.
-        ref ushort remainingRef = ref Unsafe.Add(ref Unsafe.As<char, ushort>(ref bufferRef), length);
+        ref ushort remainingRef = ref Unsafe.Add(ref Unsafe.As<char, ushort>(ref bufferRef), firstIndex);
 
         for (int i = 0; i < remainingLength; ++i)
         {
@@ -523,6 +520,56 @@ public partial class MutString
 
             _bufferPosition = length;
         }
+
+        return this;
+    }
+
+    public MutString Trim() => TrimStart().TrimEnd();
+
+    public MutString TrimStart()
+    {
+        Span<char> bufferSpan = _buffer.AsSpan();
+#if NET5_0_OR_GREATER
+        ref char bufferRef =  ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+        ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
+#endif
+        int length = _bufferPosition;
+        int index = 0;
+
+        for (; index < length; index++)
+            if (Unsafe.Add(ref bufferRef, index) != ' ')
+                break;
+
+        if (index == 0)
+            return this;
+
+        bufferSpan.Slice(index, length - index).CopyTo(bufferSpan);
+        _bufferPosition -= index;
+
+        return this;
+    }
+
+    public MutString TrimEnd()
+    {
+        Span<char> bufferSpan = _buffer.AsSpan();
+#if NET5_0_OR_GREATER
+        ref char bufferRef =  ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+        ref char bufferRef = ref MemoryMarshal.GetReference(bufferSpan);
+#endif
+        int length = _bufferPosition;
+        int endIndex = length - 1;
+        int index = 0;
+
+        for (; index < length; index++)
+            if (Unsafe.Add(ref bufferRef, endIndex - index) != ' ')
+                break;
+
+        if (index == 0)
+            return this;
+
+        _bufferPosition -= index;
 
         return this;
     }
