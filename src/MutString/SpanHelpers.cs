@@ -38,10 +38,12 @@ internal static class SpanHelpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int IndexOfChar(ref char searchSpace, char chr, int length)
+    public static int IndexOfChar(ref char searchSpace, char value, int length)
     {
+        Debug.Assert(length >= 0);
+
         for (int index = 0; index < length; index++)
-            if (Unsafe.Add(ref searchSpace, index) == chr)
+            if (Unsafe.Add(ref searchSpace, index) == value)
                 return index;
 
         return -1;

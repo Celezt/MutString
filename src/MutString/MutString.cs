@@ -3,6 +3,9 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Celezt.Text;
 
@@ -113,6 +116,66 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     /// Sets buffer pointer to zero.
     ///</summary>
     public void Clear() => _bufferPosition = 0;
+
+    /// <summary>
+    /// Returns a value indicating whether a specified character occurs within this string.
+    /// </summary>
+    /// <returns>If it exist.</returns>
+    public bool Contains(char value) => this.IndexOf(value) >= 0;
+    /// <summary>
+    /// Returns a value indicating whether a specified character occurs within this string.
+    /// </summary>
+    /// <returns>If it exist.</returns>
+    public bool Contains(string value) => this.Contains(value.AsSpan());
+    /// <summary>
+    /// Returns a value indicating whether a specified character occurs within this string.
+    /// </summary>
+    /// <returns>If it exist.</returns>
+    public bool Contains(ReadOnlySpan<char> value) => this.IndexOf(value) >= 0;
+
+    public int IndexOf(char value) => this.IndexOf(value, 0);
+    public int IndexOf(char value, int startIndex) => this.IndexOf(value, startIndex, _bufferPosition - startIndex);
+    public int IndexOf(char value, int startIndex, int count)
+    {
+        if (startIndex < 0 || startIndex >= _bufferPosition)
+            throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+        if (count < 0 || count > _bufferPosition - startIndex)
+            throw new ArgumentOutOfRangeException(nameof(count));
+
+#if NET5_0_OR_GREATER
+    ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+        ref char bufferRef = ref MemoryMarshal.GetReference(_buffer.AsSpan());
+#endif
+        int index = SpanHelpers.IndexOfChar(ref Unsafe.Add(ref bufferRef, startIndex), value, count);
+
+        return index < 0 ? index : index + startIndex;
+    }
+    public int IndexOf(string value) => this.IndexOf(value, 0);
+    public int IndexOf(string value, int startIndex) => this.IndexOf(value, startIndex, _bufferPosition - startIndex);
+    public int IndexOf(string value, int startIndex, int count) => this.IndexOf(value.AsSpan(), startIndex, count);
+    public int IndexOf(ReadOnlySpan<char> value) => this.IndexOf(value, 0);
+    public int IndexOf(ReadOnlySpan<char> value, int startIndex) => this.IndexOf(value, startIndex, _bufferPosition - startIndex);
+    public int IndexOf(ReadOnlySpan<char> value, int startIndex, int count)
+    {
+        if (startIndex < 0 || startIndex >= _bufferPosition)
+            throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+        if (count < 0 || count > _bufferPosition - startIndex)
+            throw new ArgumentOutOfRangeException(nameof(count));
+
+#if NET5_0_OR_GREATER
+        ref char bufferRef = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+        ref char bufferRef = ref MemoryMarshal.GetReference(_buffer.AsSpan());
+#endif
+        ref char valueRef = ref MemoryMarshal.GetReference(value);
+
+        int index = SpanHelpers.IndexOf(ref Unsafe.Add(ref bufferRef, startIndex), count, ref valueRef, value.Length);
+
+        return index < 0 ? index : index + startIndex;
+    }
 
     public override int GetHashCode()
     {

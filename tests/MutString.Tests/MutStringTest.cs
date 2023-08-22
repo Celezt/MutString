@@ -699,6 +699,60 @@ public class MutStringTest
         });
     }
 
+    [TestMethod]
+    public void TestIndexOf()
+    {
+        var ms = MutString.Create("Hello World");
+
+        Assert.AreEqual(0, ms.IndexOf('H'));
+        Assert.AreEqual(10, ms.IndexOf('d'));
+        Assert.AreEqual(5, ms.IndexOf(' '));
+        Assert.AreEqual(7, ms.IndexOf('o', 5));
+        Assert.AreEqual(-1, ms.IndexOf('o', 0, 3));
+        Assert.AreEqual(-1, ms.IndexOf('o', 5, 2));
+        Assert.AreEqual(-1, ms.IndexOf('g'));
+
+        Assert.AreEqual(0, ms.IndexOf("Hello"));
+        Assert.AreEqual(6, ms.IndexOf("World"));
+        Assert.AreEqual(3, ms.IndexOf("l", 3));
+        Assert.AreEqual(-1, ms.IndexOf("Something"));
+        Assert.AreEqual(6, ms.IndexOf(new char[] { 'W', 'o' }));
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.IndexOf('H', -1);
+        });
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.IndexOf('H', 0, -1);
+        });
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.IndexOf('H', 0, 12);
+        });
+
+        Throws<ArgumentOutOfRangeException>(() =>
+        {
+            ms.IndexOf('H', 12, 0);
+        });
+    }
+
+    [TestMethod]
+    public void TestContains()
+    {
+        var ms = MutString.Create("Hello World");
+
+        Assert.IsTrue(ms.Contains('o'));
+        Assert.IsTrue(ms.Contains("o"));
+        Assert.IsTrue(ms.Contains("Hello"));
+        Assert.IsTrue(ms.Contains("World"));
+
+        Assert.IsFalse(ms.Contains('g'));
+        Assert.IsFalse(ms.Contains("Something"));
+    }
+
     public static void Throws<T>(Action task) where T : Exception
     {
         try
