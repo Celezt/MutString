@@ -54,6 +54,15 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
 * .NET Standard 1.3+
 
 ## How do I use it?
+Install the `Nuget` package:
+
+```powershell
+    dotnet add package Celezt.Text.MutString --version 2.0.0
+```
+[Package](https://www.nuget.org/packages/Celezt.Text.MutString/)
+
+Or reference the MutString.dll assembly that matches your app's platform.
+
 ### Creating `MutString`
 
 ```C#
