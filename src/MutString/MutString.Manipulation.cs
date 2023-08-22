@@ -467,7 +467,7 @@ public partial class MutString
         {
             while (true)
             {
-                int position = SpanHelpers.IndexOfChar(ref Unsafe.Add(ref bufferRef, index), firstChar, bufferSpan.Length - index);
+                int position = SpanHelpers.IndexOfChar(ref Unsafe.Add(ref bufferRef, index), firstChar, _bufferPosition - index);
 
                 if (position < 0)
                     break;
@@ -481,13 +481,13 @@ public partial class MutString
             ref char oldRef = ref MemoryMarshal.GetReference(oldValue);
             while (true)
             {
-                int pos = SpanHelpers.IndexOf(ref Unsafe.Add(ref bufferRef, index), Length - index, ref oldRef, oldValue.Length);
-                if (pos < 0)
-                {
+                int position = SpanHelpers.IndexOf(ref Unsafe.Add(ref bufferRef, index), _bufferPosition - index, ref oldRef, oldValue.Length);
+
+                if (position < 0)
                     break;
-                }
-                replacementIndices[indicesLength++] = index + pos;
-                index += pos + oldValue.Length;
+
+                replacementIndices[indicesLength++] = index + position;
+                index += position + oldValue.Length;
             }
         }
 

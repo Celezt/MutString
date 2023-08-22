@@ -6,7 +6,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MutString", "src\MutString\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MutString.Tests", "tests\MutString.Tests\MutString.Tests.csproj", "{68AE952D-43D8-4261-8D64-8B2883345358}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.NET", "perf\Benchmark.NET\Benchmark.NET.csproj", "{D59201CB-3759-4237-8E4C-882E04318A27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark.NET", "perf\Benchmark.NET\Benchmark.NET.csproj", "{D59201CB-3759-4237-8E4C-882E04318A27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
