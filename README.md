@@ -5,15 +5,24 @@ An alternative to the `System.Text.StringBuilder` C# class. Modified version of 
 Because `System.Text.StringBuilder` does a lot of unnecessary memory allocation when appending data and is overall slow with its implementations. It is also not always continuous data but instead spread across in chunks, disallowing the use of `Span`. `MutString` is designed for smaller strings that are frequently modified instead of document-sized text.
 
 ## Possible Improvements
-`MutString` is faster than [LiteStringBuilder](https://github.com/justinamiller/LiteStringBuilder) with major changes to the existing methods. Some of the implementations are based on `String`'s source code. Even with those changes, there are still possibilities for improvements. 
+`MutString` is faster than [LiteStringBuilder](https://github.com/justinamiller/LiteStringBuilder) with major changes to the existing methods. Some of the implementations are based on `String`'s source code. Even with those changes, there are still possibilities for improvement. 
 
 #### Single, Double, Decimal
 Floats currently relies on `.ToString` because it uses [Dragon4](https://www.ryanjuckett.com/printing-floating-point-numbers-part-2-dragon4/), which is hard to compete with. .NET does not in the latest version expose any of the methods used to implement it, and has too many dependencies realistically to copy.
 
-#### More Methods
-It currently lacks a few methods for manipulation and inspection that could potentially be handy for the user, e.g. `Contain`, `IndexOf`, `Split`, `Trim`. It supports `IEnumerable` that currently can be used instead. 
+#### Params Append
+It currently loops and individually appends each element. This could be improved by allocating enough space before appending. 
 
-### Performance
+#### Trim Character
+`Trim`, `TrimStart` and `TrimEnd` is supported for removing empty space. `String` supports trimming by specified characters which `MutString` does not support.
+
+#### Append Join
+`System.Text.StringBuilder` supports appending multiple elements with separators which `MutString` lacks. 
+
+#### String Comparison
+It currently does not support `StringComparison` for many of its methods which would benefit from it. Implementing `StringComparison` in a performative way is not easy and would most likely need different algorithms depending on the comparison type.
+
+## Performance
 [Benchmark Test](https://github.com/Celezt/MutString/blob/main/perf/Benchmark.NET/MutStringBenchmark.cs)
 
 ##### .NET 7
@@ -53,11 +62,12 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
 * .NET Framework 4.6+
 * .NET Standard 1.3+
 
-## How do I use it?
+## How to Use it
+
 Install the `Nuget` package:
 
 ```powershell
-    dotnet add package Celezt.Text.MutString --version 2.0.0
+    dotnet add package Celezt.Text.MutString --version 2.1.0
 ```
 [Package](https://www.nuget.org/packages/Celezt.Text.MutString/)
 
