@@ -264,15 +264,31 @@ public class MutStringTest
         var ms = MutString.Create();
         ms.Append<int>(null);
         Assert.AreEqual(0, ms.Length);
+
         ms.Append<string>("", null, "1");
         Assert.AreEqual(1, ms.Length);
+
         ms.Clear();
         ms.Append<int>(1, 2, 3, 4, 5);
         Assert.AreEqual(5, ms.Length);
-        ms.Clear();
 
+        ms.Clear();
         ms.Append<int>(1);
         Assert.AreEqual(1, ms.Length);
+
+        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+        ms.Clear();
+        var date = DateTime.Now;
+        ms.Append<DateTime>(date);
+        Assert.AreEqual(date.ToString(), (string)ms);
+
+        ms.Clear();
+        ms.Append<float>(3.14f);
+        Assert.AreEqual("3.14", (string)ms);
+
+        ms.Clear();
+        ms.Append<char[]>(new char[] { 'H', 'e', 'l', 'l', 'o' });
+        Assert.AreEqual("Hello", (string)ms);
     }
 
     [TestMethod]

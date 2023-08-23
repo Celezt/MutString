@@ -42,7 +42,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Allocates on the array's creation, and on boxing values.
+    /// Appends <see cref="object"/> values. Allocates an array and allocates when boxing.
     ///</summary>
     public MutString Append(params object[] values)
     {
@@ -56,7 +56,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends values. Allocates when boxing.
+    /// Appends <see cref="{T}"/> values. Allocates an array.
     ///</summary>
     public MutString Append<T>(params T[] values)
     {
@@ -70,30 +70,30 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends <see cref="{T}"/>. Allocates when boxing.
+    /// Appends <see cref="{T}"/> without memory allocation (if supported).
     ///</summary>
-    private MutString Append<T>(T value)
+    public MutString Append<T>(T value)
     {
         if (value is null)
             return this;
 
         switch (value)
         {
-            case string:    Append(Unsafe.As<string>(value));   break;
-            case char[]:    Append(Unsafe.As<char[]>(value));   break;
-            case char:      Append((char)(object)value);        break;
-            case int:       Append((int)(object)value);         break;
-            case long:      Append((long)(object)value);        break;
-            case bool:      Append((bool)(object)value);        break;
-            case DateTime:  Append((DateTime)(object)value);    break;
-            case decimal:   Append((decimal)(object)value);     break;
-            case float:     Append((float)(object)value);       break;
-            case double:    Append((double)(object)value);      break;
-            case byte:      Append((byte)(object)value);        break;
-            case sbyte:     Append((sbyte)(object)value);       break;
-            case ulong:     Append((ulong)(object)value);       break;
-            case uint:      Append((uint)(object)value);        break;
-            default:        Append(value.ToString());           break;
+            case string:    Append(Unsafe.As<string>(value));           break;
+            case char[]:    Append(Unsafe.As<char[]>(value));           break;
+            case char:      Append(Unsafe.As<T, char>(ref value));      break;
+            case int:       Append(Unsafe.As<T, int>(ref value));       break;
+            case long:      Append(Unsafe.As<T, long>(ref value));      break;
+            case bool:      Append(Unsafe.As<T, bool>(ref value));      break;
+            case DateTime:  Append(Unsafe.As<T, DateTime>(ref value));  break;
+            case decimal:   Append(Unsafe.As<T, decimal>(ref value));   break;
+            case float:     Append(Unsafe.As<T, float>(ref value));     break;
+            case double:    Append(Unsafe.As<T, double>(ref value));    break;
+            case byte:      Append(Unsafe.As<T, byte>(ref value));      break;
+            case sbyte:     Append(Unsafe.As<T, sbyte>(ref value));     break;
+            case ulong:     Append(Unsafe.As<T, ulong>(ref value));     break;
+            case uint:      Append(Unsafe.As<T, uint>(ref value));      break;
+            default:        Append(value.ToString());                   break;
         }
 
         return this;
@@ -238,11 +238,10 @@ public partial class MutString
     ///</summary>
     public MutString Append(int value)
     {
-        bool isNegative = value < 0;
-        if (isNegative)
-            value = -value;
-
-        AppendInteger((ulong)value, isNegative);
+        if (value < 0)
+            AppendInteger((ulong)-value, true);
+        else
+            AppendInteger((ulong)value, false);
 
         return this;
     }
@@ -251,11 +250,10 @@ public partial class MutString
     ///</summary>
     public MutString Append(long value)
     {
-        bool isNegative = value < 0;
-        if (isNegative)
-            value = -value;
-
-        AppendInteger((ulong)value, isNegative);
+        if (value < 0)
+            AppendInteger((ulong)-value, true);
+        else
+            AppendInteger((ulong)value, false);
 
         return this;
     }
@@ -285,7 +283,7 @@ public partial class MutString
     public MutString Append(double value, CultureInfo culture) => Append(value.ToString(culture));
 
     ///<summary>
-    /// Appends a <see cref="MutString"/> without memory allocation.
+    /// Inserts a <see cref="MutString"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, MutString? value)
     {
@@ -304,36 +302,36 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends <see cref="{T}"/>. Allocates when boxing.
+    /// Inserts <see cref="{T}"/> without memory allocation (if supported).
     ///</summary>
-    private MutString Insert<T>(int index, T value)
+    public MutString Insert<T>(int index, T value)
     {
         if (value is null)
             return this;
 
         switch (value)
         {
-            case string:    Insert(index, Unsafe.As<string>(value));    break;
-            case char[]:    Insert(index, Unsafe.As<char[]>(value));    break;
-            case char:      Insert(index, (char)(object)value);         break;
-            case int:       Insert(index, (int)(object)value);          break;
-            case long:      Insert(index, (long)(object)value);         break;
-            case bool:      Insert(index, (bool)(object)value);         break;
-            case DateTime:  Insert(index, (DateTime)(object)value);     break;
-            case decimal:   Insert(index, (decimal)(object)value);      break;
-            case float:     Insert(index, (float)(object)value);        break;
-            case double:    Insert(index, (double)(object)value);       break;
-            case byte:      Insert(index, (byte)(object)value);         break;
-            case sbyte:     Insert(index, (sbyte)(object)value);        break;
-            case ulong:     Insert(index, (ulong)(object)value);        break;
-            case uint:      Insert(index, (uint)(object)value);         break;
-            default:        Insert(index, value.ToString());            break;
+            case string:    Insert(index, Unsafe.As<string>(value));            break;
+            case char[]:    Insert(index, Unsafe.As<char[]>(value));            break;
+            case char:      Insert(index, Unsafe.As<T, char>(ref value));       break;
+            case int:       Insert(index, Unsafe.As<T, int>(ref value));        break;
+            case long:      Insert(index, Unsafe.As<T, long>(ref value));       break;
+            case bool:      Insert(index, Unsafe.As<T, bool>(ref value));       break;
+            case DateTime:  Insert(index, Unsafe.As<T, DateTime>(ref value));   break;
+            case decimal:   Insert(index, Unsafe.As<T, decimal>(ref value));    break;
+            case float:     Insert(index, Unsafe.As<T, float>(ref value));      break;
+            case double:    Insert(index, Unsafe.As<T, double>(ref value));     break;
+            case byte:      Insert(index, Unsafe.As<T, byte>(ref value));       break;
+            case sbyte:     Insert(index, Unsafe.As<T, sbyte>(ref value));      break;
+            case ulong:     Insert(index, Unsafe.As<T, ulong>(ref value));      break;
+            case uint:      Insert(index, Unsafe.As<T, uint>(ref value));       break;
+            default:        Insert(index, value.ToString());                    break;
         }
 
         return this;
     }
     ///<summary>
-    /// Appends a <see cref="string"/> without memory allocation.
+    /// Inserts a <see cref="string"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, string? value)
     {
@@ -345,7 +343,7 @@ public partial class MutString
         return this;
     }
     ///<summary> 
-    /// Appends a <see cref="char"/> without memory allocation.
+    /// Inserts a <see cref="char"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, char value)
     {
@@ -357,7 +355,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends a <see cref="bool"/> without memory allocation.
+    /// Inserts a <see cref="bool"/> without memory allocation.
     ///</summary>
     public unsafe MutString Insert(int index, bool value)
     {
@@ -393,7 +391,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends a <see cref="char"/>[] without memory allocation.
+    /// Inserts a <see cref="char"/>[] without memory allocation.
     ///</summary>
     public MutString Insert(int index, char[] value)
     {
@@ -405,7 +403,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends a <see cref="ReadOnlySpan{char}"/> without memory allocation.
+    /// Inserts a <see cref="ReadOnlySpan{char}"/> without memory allocation.
     ///</summary> 
     public MutString Insert(int index, ReadOnlySpan<char> value)
     {
@@ -423,7 +421,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends an <see cref="object.ToString()"/>. Allocates memory.
+    /// Inserts an <see cref="object.ToString()"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, object? value)
     {
@@ -435,15 +433,15 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends an <see cref="DateTime"/>. Allocates memory.
+    /// Inserts an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, DateTime value) => Insert(index, value, _defaultCulture);
     ///<summary>
-    /// Appends an <see cref="DateTime"/>. Allocates memory.
+    /// Inserts an <see cref="DateTime"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, DateTime value, CultureInfo culture) => Insert(index, value.ToString(culture));
     ///<summary>
-    /// Appends an <see cref="sbyte"/> without memory allocation.
+    /// Inserts an <see cref="sbyte"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, sbyte value)
     {
@@ -455,69 +453,67 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Appends an <see cref="byte"/> without memory allocation.
+    /// Inserts an <see cref="byte"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, byte value) => InsertInteger(index, value, false);
     ///<summary>
-    /// Appends an <see cref="uint"/> without memory allocation.
+    /// Inserts an <see cref="uint"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, uint value) => InsertInteger(index, value, false);
     /// <summary>
-    /// Appends a <see cref="ulong"/> without memory allocation.
+    /// Inserts a <see cref="ulong"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, ulong value) => InsertInteger(index, value, false);
     ///<summary>
-    /// Appends an <see cref="short"/> without memory allocation.
+    /// Inserts an <see cref="short"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, short value) => Insert(index, (int)value);
     ///<summary>
-    /// Appends an <see cref="int"/> without memory allocation.
+    /// Inserts an <see cref="int"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, int value)
     {
-        bool isNegative = value < 0;
-        if (isNegative)
-            value = -value;
-
-        InsertInteger(index, (ulong)value, isNegative);
+        if (value < 0)
+            InsertInteger(index, (ulong)-value, true);
+        else
+            InsertInteger(index, (ulong)value, false);
 
         return this;
     }
     ///<summary>
-    /// Appends an <see cref="long"/> without memory allocation.
+    /// Inserts an <see cref="long"/> without memory allocation.
     ///</summary>
     public MutString Insert(int index, long value)
     {
-        bool isNegative = value < 0;
-        if (isNegative)
-            value = -value;
-
-        InsertInteger(index, (ulong)value, isNegative);
+        if (value < 0)
+            InsertInteger(index, (ulong)-value, true);
+        else
+            InsertInteger(index, (ulong)value, false);
 
         return this;
     }
     ///<summary>
-    /// Appends a <see cref="float"/>. Allocates memory.
+    /// Inserts a <see cref="float"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, float value) => Insert(index, value, _defaultCulture);
     ///<summary>
-    /// Appends a <see cref="float"/>. Allocates memory.
+    /// Inserts a <see cref="float"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, float value, CultureInfo culture) => Insert(index, value.ToString(culture));
     ///<summary>
-    /// Appends a <see cref="decimal"/>. Allocates memory.
+    /// Inserts a <see cref="decimal"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, decimal value) => Insert(index, value, _defaultCulture);
     ///<summary>
-    /// Appends a <see cref="decimal"/>. Allocates memory.
+    /// Inserts a <see cref="decimal"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, decimal value, CultureInfo culture) => Insert(index, value.ToString(culture));
     ///<summary>
-    /// Appends a <see cref="double"/>. Allocates memory.
+    /// Inserts a <see cref="double"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, double value) => Insert(index, value, _defaultCulture);
     ///<summary>
-    /// Appends a <see cref="double"/>. Allocates memory.
+    /// Inserts a <see cref="double"/>. Allocates memory.
     ///</summary>
     public MutString Insert(int index, double value, CultureInfo culture) => Insert(index, value.ToString(culture));
 
@@ -556,7 +552,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Clears values, and append new values. Will allocate a little memory due to boxing.
+    /// Clears values, and append new values. Allocates an array and allocates when boxing.
     ///</summary>
     public MutString Set(params object[] values)
     {
