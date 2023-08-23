@@ -118,17 +118,17 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     public void Clear() => _bufferPosition = 0;
 
     /// <summary>
-    /// Returns a value indicating whether a specified character occurs within this string.
+    /// Returns a value indicating whether a specified character occurs.
     /// </summary>
     /// <returns>If it exist.</returns>
     public bool Contains(char value) => this.IndexOf(value) >= 0;
     /// <summary>
-    /// Returns a value indicating whether a specified character occurs within this string.
+    /// Returns a value indicating whether a specified character occurs.
     /// </summary>
     /// <returns>If it exist.</returns>
     public bool Contains(string value) => this.Contains(value.AsSpan());
     /// <summary>
-    /// Returns a value indicating whether a specified character occurs within this string.
+    /// Returns a value indicating whether a specified character occurs.
     /// </summary>
     /// <returns>If it exist.</returns>
     public bool Contains(ReadOnlySpan<char> value) => this.IndexOf(value) >= 0;
@@ -288,11 +288,10 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     public static explicit operator Span<char>(MutString value) => value.Span;
     public static explicit operator char[](MutString value)
     {
-        char[] array;
 #if NET5_0_OR_GREATER
-        array = GC.AllocateUninitializedArray<char>(value.Length, true);
+        char[] array = GC.AllocateUninitializedArray<char>(value.Length, true);
 #else
-        array = new char[value.Length];
+        char[] array = new char[value.Length];
 #endif
         value.Span.CopyTo(array);
 
