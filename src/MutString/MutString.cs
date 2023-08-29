@@ -278,14 +278,15 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     public static int CompareTo(MutString span, MutString other, StringComparison comparisonType)
         => span.CompareTo(other, comparisonType);
 
-    public static implicit operator MutString(string value) => new MutString(value);
-    public static implicit operator MutString(char[] value) => new MutString(value);
-    public static implicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
-    public static implicit operator MutString(Span<char> value) => new MutString(value);
+    public static explicit operator MutString(string value) => new MutString(value);
+    public static explicit operator MutString(char[] value) => new MutString(value);
+    public static explicit operator MutString(ReadOnlySpan<char> value) => new MutString(value);
+    public static explicit operator MutString(Span<char> value) => new MutString(value);
+
+    public static implicit operator ReadOnlySpan<char>(MutString value) => value.ReadOnlySpan;
+    public static implicit operator Span<char>(MutString value) => value.Span;
 
     public static explicit operator string(MutString value) => value.ToString();
-    public static explicit operator ReadOnlySpan<char>(MutString value) => value.ReadOnlySpan;
-    public static explicit operator Span<char>(MutString value) => value.Span;
     public static explicit operator char[](MutString value)
     {
 #if NET5_0_OR_GREATER
