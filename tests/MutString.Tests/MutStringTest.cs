@@ -731,8 +731,8 @@ public class MutStringTest
         var ms1 = ms.Clone();
         ms1.Append(" beautiful world!");
 
-        Assert.AreEqual("Hello", ms);
-        Assert.AreEqual("Hello beautiful world!", ms1);
+        Assert.AreEqual("Hello", (string)ms);
+        Assert.AreEqual("Hello beautiful world!", (string)ms1);
 
         Assert.AreEqual(5, ms.Length);
         Assert.AreEqual(22, ms1.Length);
@@ -741,8 +741,8 @@ public class MutStringTest
         Assert.AreEqual(64, ms1.Capacity);
 
         ms1.Set("No");
-        Assert.AreEqual("Hello", ms);
-        Assert.AreEqual("No", ms1);
+        Assert.AreEqual("Hello", (string)ms);
+        Assert.AreEqual("No", (string)ms1);
 
         Assert.AreEqual(5, ms.Length);
         Assert.AreEqual(2, ms1.Length);
@@ -768,15 +768,11 @@ public class MutStringTest
     [TestMethod]
     public void TestImplicitCast()
     {
-        MutString Implicit(MutString mut) => mut;
-
         var ms = new MutString("Hello");
         var chr = new char[] { 'H', 'e', 'l', 'l', 'o' };
 
-        Assert.AreEqual(ms, Implicit("Hello"));
-        Assert.AreEqual(ms, Implicit("Hello".AsSpan()));
-        Assert.AreEqual(ms, Implicit(chr));
-        Assert.AreEqual(ms, Implicit(chr.AsSpan()));
+        Assert.IsTrue(MemoryExtensions.Equals("Hello".AsSpan(), ms, StringComparison.Ordinal));
+        Assert.IsTrue(MemoryExtensions.Equals(chr.AsSpan(), ms, StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -789,6 +785,11 @@ public class MutStringTest
         Assert.IsTrue(MemoryExtensions.SequenceEqual(chr.AsSpan(), (char[])ms));
         Assert.IsTrue(MemoryExtensions.Equals("Hello", (Span<char>)ms, StringComparison.Ordinal));
         Assert.IsTrue(MemoryExtensions.Equals("Hello", (ReadOnlySpan<char>)ms, StringComparison.Ordinal));
+
+        Assert.AreEqual(ms, (MutString)"Hello");
+        Assert.AreEqual(ms, (MutString)("Hello".AsSpan()));
+        Assert.AreEqual(ms, (MutString)chr);
+        Assert.AreEqual(ms, (MutString)(chr.AsSpan()));
     }
 
     [TestMethod]
@@ -843,13 +844,13 @@ public class MutStringTest
     {
         var ms = MutString.Create("Hello World");
 
-        Assert.IsTrue(ms.CompareTo("Hello World", StringComparison.Ordinal) == 0);
-        Assert.IsTrue(ms.CompareTo("Gello World", StringComparison.Ordinal) > 0);
-        Assert.IsTrue(ms.CompareTo("Iello World", StringComparison.Ordinal) < 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"Hello World", StringComparison.Ordinal) == 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"Gello World", StringComparison.Ordinal) > 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"Iello World", StringComparison.Ordinal) < 0);
 
-        Assert.IsTrue(ms.CompareTo("hello world", StringComparison.OrdinalIgnoreCase) == 0);
-        Assert.IsTrue(ms.CompareTo("gello world", StringComparison.OrdinalIgnoreCase) > 0);
-        Assert.IsTrue(ms.CompareTo("iello world", StringComparison.OrdinalIgnoreCase) < 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"hello world", StringComparison.OrdinalIgnoreCase) == 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"gello world", StringComparison.OrdinalIgnoreCase) > 0);
+        Assert.IsTrue(ms.CompareTo((MutString)"iello world", StringComparison.OrdinalIgnoreCase) < 0);
     }
 
     [TestMethod]

@@ -5,9 +5,11 @@
     <AssemblyTitle>Celest.String.Tests</AssemblyTitle>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Celezt.Text.MutString" Version="2.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.3.2" />
     <PackageReference Include="MSTest.TestFramework" Version="1.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MutString\MutString.csproj" />
   </ItemGroup>
 </Project>
