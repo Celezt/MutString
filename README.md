@@ -67,7 +67,7 @@ AMD Ryzen 7 7700, 1 CPU, 16 logical and 8 physical cores
 Install the `Nuget` package:
 
 ```powershell
-    dotnet add package Celezt.Text.MutString --version 2.1.0
+    dotnet add package Celezt.Text.MutString --version 2.2.0
 ```
 [Package](https://www.nuget.org/packages/Celezt.Text.MutString/)
 
