@@ -35,7 +35,7 @@ public partial class MutString
         {
             EnsureCapacity(n);
 
-            value.Span.TryCopyTo(_buffer.AsSpan(_bufferPosition, n));
+            value.Span.CopyTo(_buffer.AsSpan(_bufferPosition, n));
             _bufferPosition += n;
         }
 
@@ -518,7 +518,7 @@ public partial class MutString
     public MutString Insert(int index, double value, CultureInfo culture) => Insert(index, value.ToString(culture));
 
     ///<summary>
-    /// Clears values, and append new <see cref="MutString"/> without memory allocation.
+    /// Clears values, and append <see cref="MutString"/> without memory allocation.
     ///</summary>
     public MutString Set(MutString other)
     {
@@ -528,7 +528,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Clears values, and append new <see cref="string"/> without memory allocation.
+    /// Clears values, and append <see cref="string"/> without memory allocation.
     ///</summary>
     public MutString Set(string str)
     {
@@ -538,11 +538,11 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Clears values, and append new <see cref="char[]"/> without memory allocation.
+    /// Clears values, and append <see cref="char[]"/> without memory allocation.
     ///</summary>
     public MutString Set(char[] value) => Set(value.AsSpan());
     ///<summary>
-    /// Clears values, and append new <see cref="ReadOnlySpan{char}"/> without memory allocation.
+    /// Clears values, and append <see cref="ReadOnlySpan{char}"/> without memory allocation.
     ///</summary>
     public MutString Set(ReadOnlySpan<char> value)
     {
@@ -552,7 +552,7 @@ public partial class MutString
         return this;
     }
     ///<summary>
-    /// Clears values, and append new values. Allocates an array and allocates when boxing.
+    /// Clears values, and append values. Allocates an array and allocates when boxing.
     ///</summary>
     public MutString Set(params object[] values)
     {

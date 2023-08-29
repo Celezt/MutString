@@ -275,8 +275,24 @@ public partial class MutString : IComparable, IComparable<MutString>, IEnumerabl
     /// </summary>
     public static MutString Clone(MutString toClone) => toClone.Clone();
 
-    public static int CompareTo(MutString span, MutString other, StringComparison comparisonType)
-        => span.CompareTo(other, comparisonType);
+    /// <summary>
+    /// Compares the specified <paramref name="mutString"/> and <paramref name="other"/> using the specified <paramref name="comparisonType"/>,
+    /// and returns an integer that indicates their relative position in the sort order.
+    /// </summary>
+    /// <param name="mutString">The source <see cref="MutString"/>.</param>
+    /// <param name="other">The value to compare with the source <see cref="MutString"/>.</param>
+    /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="mutString"/> and <paramref name="other"/> are compared.</param>
+    public static int CompareTo(MutString mutString, MutString? other, StringComparison comparisonType)
+        => mutString.CompareTo(other, comparisonType);
+    /// <summary>
+    /// Compares the specified <paramref name="mutString"/> and <paramref name="other"/> using the specified <paramref name="comparisonType"/>,
+    /// and returns an integer that indicates their relative position in the sort order.
+    /// </summary>
+    /// <param name="mutString">The source <see cref="MutString"/>.</param>
+    /// <param name="other">The value to compare with the source <see cref="MutString"/>.</param>
+    /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="mutString"/> and <paramref name="other"/> are compared.</param>
+    public static int CompareTo(MutString mutString, ReadOnlySpan<char> other, StringComparison comparisonType)
+    => mutString.CompareTo(other, comparisonType);
 
     public static explicit operator MutString(string value) => new MutString(value);
     public static explicit operator MutString(char[] value) => new MutString(value);

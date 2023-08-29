@@ -843,14 +843,17 @@ public class MutStringTest
     public void TestComparable()
     {
         var ms = MutString.Create("Hello World");
+        var ms1 = MutString.Create("Hello World");
 
-        Assert.IsTrue(ms.CompareTo((MutString)"Hello World", StringComparison.Ordinal) == 0);
-        Assert.IsTrue(ms.CompareTo((MutString)"Gello World", StringComparison.Ordinal) > 0);
-        Assert.IsTrue(ms.CompareTo((MutString)"Iello World", StringComparison.Ordinal) < 0);
+        Assert.IsTrue(ms.CompareTo(ms1, StringComparison.Ordinal) == 0);
 
-        Assert.IsTrue(ms.CompareTo((MutString)"hello world", StringComparison.OrdinalIgnoreCase) == 0);
-        Assert.IsTrue(ms.CompareTo((MutString)"gello world", StringComparison.OrdinalIgnoreCase) > 0);
-        Assert.IsTrue(ms.CompareTo((MutString)"iello world", StringComparison.OrdinalIgnoreCase) < 0);
+        Assert.IsTrue(ms.CompareTo("Hello World", StringComparison.Ordinal) == 0);
+        Assert.IsTrue(ms.CompareTo("Gello World", StringComparison.Ordinal) > 0);
+        Assert.IsTrue(ms.CompareTo("Iello World", StringComparison.Ordinal) < 0);
+
+        Assert.IsTrue(ms.CompareTo("hello world", StringComparison.OrdinalIgnoreCase) == 0);
+        Assert.IsTrue(ms.CompareTo("gello world", StringComparison.OrdinalIgnoreCase) > 0);
+        Assert.IsTrue(ms.CompareTo("iello world", StringComparison.OrdinalIgnoreCase) < 0);
     }
 
     [TestMethod]
@@ -958,6 +961,29 @@ public class MutStringTest
         ms.Set("   Hello World   ");
         ms.Trim();
         Assert.AreEqual("Hello World", (string)ms);
+    }
+
+    [TestMethod]
+    public void TestCopyTo()
+    {
+        var ms = MutString.Create("Hello World");
+        var ms1 = MutString.Create();
+
+        ms.CopyTo(ms1);
+        Assert.IsTrue(ms == ms1);
+
+        Span<char> span = stackalloc char[11];
+        ms.CopyTo(span);
+        Assert.IsTrue(ms == span);
+
+        var chars = new char[11];
+        ms.CopyTo(chars);
+        Assert.IsTrue(ms == chars);
+
+        var ms2 = MutString.Create();
+        ms2.Length = 11;
+        "Hello World".CopyTo(ms2);
+        Assert.IsTrue(ms == ms2);
     }
 
     public static void Throws<T>(Action task) where T : Exception
