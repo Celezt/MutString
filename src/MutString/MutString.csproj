@@ -12,7 +12,7 @@
     <PackageTags>string, stringbuilder, concat, span</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RootNamespace>Celezt.Text</RootNamespace>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
     <Title>MutString</Title>
     <PackageId>Celezt.Text.$(AssemblyName)</PackageId>
     <Copyright>MIT</Copyright>
@@ -20,10 +20,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <PackageReleaseNotes>* Added IndexOf, Contains, Trim and Insert
-* Added documentation
-* Removed boxing on generic insertion
-* Fixed replace bug</PackageReleaseNotes>
+    <PackageReleaseNotes>* Added CopyTo
+* Changed explicit and implicit casting (breaking change)</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
